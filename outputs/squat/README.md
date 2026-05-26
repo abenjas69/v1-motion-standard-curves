@@ -1,6 +1,6 @@
 # Squat Standard Curve Output
 
-Generated at: `2026-05-25T21:23:06.718897+00:00`
+Generated at: `2026-05-26T09:44:55.660285+00:00`
 
 ## Purpose
 
@@ -10,8 +10,8 @@ This folder contains a preliminary standard squat curve for Team V1 Phase II. It
 
 - Action: `squat`
 - Protocol: 3 consecutive squat repetitions in about 5 seconds
-- Requested sessions: `116,118`
-- Processed sessions: `116,118`
+- Requested sessions: `116,118,126,127,128,129,130,131,133,134,135,136,137,138,139,140,141,143,144,145`
+- Processed sessions: `116,118,126,127,128,129,130,131,133,134,135,136,137,138,139,140,141,143,144,145`
 - Ignored sessions: `117,119`
 - Angle ID: `left_knee`
 
@@ -19,10 +19,11 @@ Sessions `117` and `119` must remain ignored.
 
 ## Parameters
 
-- Boundary event type: `minima`
+- Boundary event type: `peak_centered`
 - Grid points: `101`
 - Smooth window: `5`
 - Event smooth window: `5`
+- Boundary angle margin: `20.0`
 - Min repetition seconds: `1.5`
 - Max repetition seconds: `4.0`
 - Min repetition amplitude: `50.0`
@@ -34,11 +35,11 @@ Sessions `117` and `119` must remain ignored.
 
 ## Duration Summary
 
-- Total repetitions: `6`
-- Used repetitions: `6`
+- Total repetitions: `60`
+- Used repetitions: `60`
 - Excluded duration outliers: `0`
-- Average repetition seconds: `2.9525`
-- Average repetitions per minute: `20.321761`
+- Average repetition seconds: `2.7602`
+- Average repetitions per minute: `21.737555`
 
 ## Validation Notes
 

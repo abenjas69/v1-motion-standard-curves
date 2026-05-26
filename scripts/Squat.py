@@ -54,9 +54,18 @@ def parse_args():
     )
     parser.add_argument(
         "--event-type",
-        choices=["minima", "maxima"],
-        default="minima",
-        help="Boundary event type. Squat sessions 116 and 118 currently fit minima-to-minima.",
+        choices=["peak_centered", "minima", "maxima"],
+        default="peak_centered",
+        help=(
+            "Segmentation method. peak_centered uses strong squat peaks as repetition centers "
+            "and valleys/session edges as boundaries."
+        ),
+    )
+    parser.add_argument(
+        "--boundary-angle-margin",
+        type=float,
+        default=20.0,
+        help="For peak_centered mode, accept session start/end as repetition boundaries when they are close to the session minimum.",
     )
     parser.add_argument(
         "--min-repetition-seconds",
@@ -203,6 +212,89 @@ def extract_repetitions_from_events(
         )
 
     return repetitions
+
+
+def extract_peak_centered_repetitions(
+    curve,
+    min_repetition_seconds,
+    max_repetition_seconds,
+    min_repetition_amplitude,
+    min_peak_angle,
+    boundary_angle_margin,
+    smooth_window,
+    min_distance_seconds,
+):
+    valleys = find_local_events(
+        curve,
+        smooth_window=smooth_window,
+        min_distance_seconds=min_distance_seconds,
+        event_type="minima",
+    )
+    peaks = find_local_events(
+        curve,
+        smooth_window=smooth_window,
+        min_distance_seconds=min_distance_seconds,
+        event_type="maxima",
+    )
+    smoothed = smooth_curve(curve, smooth_window)
+    global_min = min(angle for _, angle in curve)
+
+    boundaries = list(valleys)
+    if curve[0][1] <= global_min + boundary_angle_margin:
+        boundaries.append(0)
+    if curve[-1][1] <= global_min + boundary_angle_margin:
+        boundaries.append(len(curve) - 1)
+    boundaries = sorted(set(boundaries))
+
+    strong_peaks = [idx for idx in peaks if smoothed[idx][1] >= min_peak_angle]
+    repetitions = []
+    used_pairs = set()
+
+    for peak_idx in strong_peaks:
+        left_candidates = [idx for idx in boundaries if idx < peak_idx]
+        right_candidates = [idx for idx in boundaries if idx > peak_idx]
+        if not left_candidates or not right_candidates:
+            continue
+
+        start_idx = left_candidates[-1]
+        end_idx = right_candidates[0]
+        pair = (start_idx, end_idx)
+        if pair in used_pairs:
+            continue
+
+        segment = curve[start_idx : end_idx + 1]
+        if len(segment) < 5:
+            continue
+
+        duration_seconds = (segment[-1][0] - segment[0][0]) / 1000.0
+        if (
+            duration_seconds < min_repetition_seconds
+            or duration_seconds > max_repetition_seconds
+        ):
+            continue
+
+        angles = [angle for _, angle in segment]
+        max_angle = max(angles)
+        min_angle = min(angles)
+        amplitude = max_angle - min_angle
+        if amplitude < min_repetition_amplitude:
+            continue
+
+        used_pairs.add(pair)
+        repetitions.append(
+            {
+                "repetition_no": len(repetitions) + 1,
+                "points": segment,
+                "duration_seconds": duration_seconds,
+                "start_angle": segment[0][1],
+                "end_angle": segment[-1][1],
+                "min_angle": min_angle,
+                "max_angle": max_angle,
+                "amplitude": amplitude,
+            }
+        )
+
+    return repetitions, boundaries, strong_peaks
 
 
 def get_point_percent(points, point_index):
@@ -799,6 +891,7 @@ Sessions `117` and `119` must remain ignored.
 - Grid points: `{args.grid_points}`
 - Smooth window: `{args.smooth_window}`
 - Event smooth window: `{args.event_smooth_window}`
+- Boundary angle margin: `{args.boundary_angle_margin}`
 - Min repetition seconds: `{args.min_repetition_seconds}`
 - Max repetition seconds: `{args.max_repetition_seconds}`
 - Min repetition amplitude: `{args.min_repetition_amplitude}`
@@ -858,19 +951,37 @@ def main():
             continue
 
         processed_session_ids.append(session_id)
-        event_indexes = find_local_events(
-            curve,
-            smooth_window=args.event_smooth_window,
-            min_distance_seconds=args.min_repetition_seconds,
-            event_type=args.event_type,
-        )
-        session_repetitions = extract_repetitions_from_events(
-            curve,
-            event_indexes,
-            min_repetition_seconds=args.min_repetition_seconds,
-            max_repetition_seconds=args.max_repetition_seconds,
-            min_repetition_amplitude=args.min_repetition_amplitude,
-        )
+        if args.event_type == "peak_centered":
+            session_repetitions, event_indexes, strong_peak_indexes = (
+                extract_peak_centered_repetitions(
+                    curve,
+                    min_repetition_seconds=args.min_repetition_seconds,
+                    max_repetition_seconds=args.max_repetition_seconds,
+                    min_repetition_amplitude=args.min_repetition_amplitude,
+                    min_peak_angle=args.min_peak_angle,
+                    boundary_angle_margin=args.boundary_angle_margin,
+                    smooth_window=args.event_smooth_window,
+                    min_distance_seconds=args.min_repetition_seconds,
+                )
+            )
+            local_event_count = len(event_indexes)
+            strong_peak_count = len(strong_peak_indexes)
+        else:
+            event_indexes = find_local_events(
+                curve,
+                smooth_window=args.event_smooth_window,
+                min_distance_seconds=args.min_repetition_seconds,
+                event_type=args.event_type,
+            )
+            session_repetitions = extract_repetitions_from_events(
+                curve,
+                event_indexes,
+                min_repetition_seconds=args.min_repetition_seconds,
+                max_repetition_seconds=args.max_repetition_seconds,
+                min_repetition_amplitude=args.min_repetition_amplitude,
+            )
+            local_event_count = len(event_indexes)
+            strong_peak_count = ""
         raw_valid_repetition_count = len(session_repetitions)
         edge_trim_count = min(args.trim_edge_repetitions, raw_valid_repetition_count // 2)
         if edge_trim_count > 0:
@@ -961,7 +1072,8 @@ def main():
                 "session_id": session_id,
                 "angle_points": len(curve),
                 "event_type": args.event_type,
-                "local_events": len(event_indexes),
+                "local_events": local_event_count,
+                "strong_peaks": strong_peak_count,
                 "valid_repetitions_before_edge_trim": raw_valid_repetition_count,
                 "edge_trimmed_repetitions": raw_valid_repetition_count
                 - len(edge_trimmed_repetitions),
@@ -1039,6 +1151,7 @@ def main():
             "angle_points",
             "event_type",
             "local_events",
+            "strong_peaks",
             "valid_repetitions_before_edge_trim",
             "edge_trimmed_repetitions",
             "repetitions_after_edge_trim",
