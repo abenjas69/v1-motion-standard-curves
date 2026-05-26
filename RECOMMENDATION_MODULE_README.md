@@ -17,6 +17,14 @@ The script writes:
 
 It does not regenerate standard curves. It loads existing standard CSV files produced by `Walk.py`, `Squat.py`, or `Upstairs.py`.
 
+For walking and squat, the script can also segment a complete patient session before comparison:
+
+- walking is segmented into detected gait cycles;
+- squat is segmented into detected repetitions;
+- upstairs currently remains a full-action comparison because the available standard curve represents the whole stair-climbing action, not one isolated step.
+
+This gives fairer results for complete API sessions because each detected cycle/repetition is normalized to 0-100% before being compared with the standard curve.
+
 ## 2. Why Raw/Processed Data Input Is Used
 
 Lee from the web team confirmed that image input is not needed for the first version. Raw or processed curve data is preferred because it is easier to compare numerically, easier to send through the backend, and avoids image parsing errors.
@@ -38,6 +46,12 @@ Patient input, choose one:
 - `--patient-session-id`
 
 If both are provided, `--patient-csv` is used and the script prints a warning.
+
+Optional segmentation control:
+
+- `--segment-patient auto`: default. Segment walking/squat when a time axis is available.
+- `--segment-patient never`: compare the full patient curve directly.
+- `--segment-patient always`: require segmentation and fail if no valid segments are detected.
 
 The default API base URL is:
 
@@ -106,6 +120,8 @@ The JSON contains:
 - input type;
 - patient source;
 - standard source;
+- comparison mode;
+- segmentation summary;
 - status;
 - numeric metrics;
 - observations;
@@ -134,6 +150,8 @@ These thresholds are constants at the top of `generate_recommendation_from_curve
 
 They are not clinically validated.
 
+When segmentation is used, the main status is calculated from the average normalized patient cycle/repetition compared with the standard curve. The JSON also includes per-segment metric summaries so the web team or doctors can inspect variability between cycles/repetitions.
+
 ## 7. Limitations
 
 - This is not a medical diagnosis.
@@ -142,6 +160,8 @@ They are not clinically validated.
 - The output should be interpreted by a qualified clinician.
 - The standard curve quality depends on the healthy baseline data.
 - The first version does not use chart images.
+- Walking/squat segmentation uses preliminary engineering thresholds and should be visually validated.
+- Upstairs is currently compared as a full action because the current standard curve is full-action based.
 
 ## 8. Future Improvements
 
@@ -151,4 +171,3 @@ They are not clinically validated.
 - Add patient-vs-standard visualization output.
 - Optionally add LLM text generation later.
 - Optionally accept chart images later if the web team needs that workflow.
-
