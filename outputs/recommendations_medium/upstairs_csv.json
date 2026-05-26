@@ -1,0 +1,65 @@
+{
+  "action": "upstairs",
+  "angleID": "left_knee",
+  "comparisonVersion": "v0.3-segmented-visual-exports",
+  "inputType": "csv",
+  "patientSource": "output_upstairs_python\\standard_upstairs_action.csv",
+  "standardSource": "output_upstairs_python\\standard_upstairs_curve.csv",
+  "comparisonMode": "full_curve",
+  "segmentation": {
+    "requestedMode": "auto",
+    "attempted": false,
+    "used": false,
+    "method": "whole_action",
+    "label": "full_action",
+    "segmentsDetected": 0,
+    "segmentsUsed": 0,
+    "segmentsRejected": 0,
+    "rejectedReasonCounts": {},
+    "averageSegmentDurationSeconds": null,
+    "segmentDurationSeconds": [],
+    "fallbackReason": "The current upstairs standard curve represents the full stair-climbing action, not one step cycle."
+  },
+  "status": "normal",
+  "confidence": "high",
+  "engineeringThresholds": {
+    "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+    "normalRmseMax": 8.0,
+    "mildRmseMax": 18.0,
+    "normalAmplitudeDifferenceMax": 10.0,
+    "mildAmplitudeDifferenceMax": 25.0,
+    "normalOutsideStandardBandMax": 20.0,
+    "mildOutsideStandardBandMax": 50.0
+  },
+  "metrics": {
+    "patientPeakAngle": 70.552651,
+    "standardPeakAngle": 75.181932,
+    "peakAngleDifference": -4.629281,
+    "patientMinAngle": 11.046434,
+    "standardMinAngle": 10.814784,
+    "minAngleDifference": 0.23165,
+    "patientAmplitude": 59.506217,
+    "standardAmplitude": 64.367148,
+    "amplitudeDifference": -4.860931,
+    "mae": 2.652209,
+    "rmse": 3.098252,
+    "maxAbsoluteDeviation": 5.61254,
+    "meanSignedDeviation": 0.025175,
+    "correlation": 0.993548,
+    "outsideStandardBandPercent": 6.930693
+  },
+  "qualityNotes": [
+    "The comparison used the full patient curve because segmentation was not available or not appropriate for this action.",
+    "Upstairs is currently compared as a full stair-climbing action because the current standard curve is full-action based."
+  ],
+  "observations": [
+    "The patient curve is close to the current healthy reference under the preliminary thresholds."
+  ],
+  "recommendationText": "The stair-climbing curve is close to the current healthy reference. The patient curve is close to the current healthy reference under the preliminary thresholds. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.",
+  "doctorReviewNote": "This is AI-assisted analysis and should be reviewed by a doctor.",
+  "limitations": [
+    "This output is not a medical diagnosis.",
+    "The analysis is based only on motion curve data.",
+    "The result should be interpreted by a qualified clinician."
+  ]
+}

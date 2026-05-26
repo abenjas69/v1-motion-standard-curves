@@ -135,12 +135,14 @@ The JSON contains:
 
 - action;
 - angle ID;
+- comparison version;
 - input type;
 - patient source;
 - standard source;
 - comparison mode;
 - segmentation summary;
 - status;
+- confidence;
 - engineering thresholds;
 - numeric metrics;
 - quality notes;
@@ -157,6 +159,16 @@ mild_deviation
 significant_deviation
 unclear
 ```
+
+Example confidence values:
+
+```text
+high
+medium
+low
+```
+
+`comparisonVersion` is included so V2/M2 can track which recommendation algorithm produced the result.
 
 ## 6. How Status Is Calculated
 
@@ -180,7 +192,25 @@ The HTML visualization shows:
 - individual patient segments when segmentation was used;
 - observations and data-quality notes.
 
-## 7. Limitations
+Confidence is an engineering confidence estimate, not a clinical confidence score. It is reduced when important data is missing, segmentation is weak, too many detected segments are rejected, or the patient curve appears strongly offset from the standard curve.
+
+## 7. Automated Tests
+
+Run the local tests with:
+
+```bash
+python -m unittest test_recommendation_module.py
+```
+
+The tests use only standard-library Python and temporary CSV files. They check:
+
+- full-curve comparison;
+- walking cycle segmentation on synthetic data;
+- JSON/TXT/HTML/CSV output generation;
+- `comparisonVersion`;
+- `confidence`.
+
+## 8. Limitations
 
 - This is not a medical diagnosis.
 - The result is based only on motion curve data.
@@ -191,7 +221,7 @@ The HTML visualization shows:
 - Walking/squat segmentation uses preliminary engineering thresholds and should be visually validated.
 - Upstairs is currently compared as a full action because the current standard curve is full-action based.
 
-## 8. Future Improvements
+## 9. Future Improvements
 
 - Use more clinical data.
 - Validate thresholds with doctors.

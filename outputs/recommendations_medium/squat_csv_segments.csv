@@ -1,0 +1,2 @@
+used_segment_index,detected_segment_index,source,start_time_seconds,end_time_seconds,duration_seconds,point_count,amplitude_degrees,peak_angle,status,rmse,mae,peak_angle_difference,amplitude_difference,outside_standard_band_percent
+1,1,peak_centered,0.0,2.704996,2.704996,99,94.898931,102.884455,normal,0.150996,0.132663,-0.167833,-0.167833,0.0

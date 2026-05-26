@@ -17,6 +17,8 @@ MILD_AMPLITUDE_DIFF_MAX = 25.0
 NORMAL_OUTSIDE_BAND_MAX = 20.0
 MILD_OUTSIDE_BAND_MAX = 50.0
 
+COMPARISON_VERSION = "v0.3-segmented-visual-exports"
+
 # Preliminary engineering segmentation settings. These values are action-specific
 # starting points and should be validated visually with real patient data.
 ACTION_SEGMENT_CONFIGS = {
@@ -728,6 +730,38 @@ def classify_status(metrics):
     return "mild_deviation"
 
 
+def estimate_confidence(action, metrics, segmentation=None):
+    if metrics is None:
+        return "low"
+
+    confidence_score = 2
+    if metrics.get("correlation") is None:
+        confidence_score -= 1
+    if metrics.get("outsideStandardBandPercent") is None:
+        confidence_score -= 1
+
+    if segmentation:
+        if segmentation.get("used"):
+            used = segmentation.get("segmentsUsed") or 0
+            detected = segmentation.get("segmentsDetected") or 0
+            rejected = segmentation.get("segmentsRejected") or 0
+            if action in ("walking", "squat") and used < 3:
+                confidence_score -= 1
+            if detected and rejected / detected > 0.4:
+                confidence_score -= 1
+        elif action in ("walking", "squat") and segmentation.get("fallbackReason"):
+            confidence_score -= 1
+
+    if abs(metrics.get("meanSignedDeviation") or 0.0) > 25.0:
+        confidence_score -= 1
+
+    if confidence_score >= 2:
+        return "high"
+    if confidence_score == 1:
+        return "medium"
+    return "low"
+
+
 def generate_observations(action, metrics, segmentation=None):
     observations = []
     peak_diff = metrics["peakAngleDifference"]
@@ -859,6 +893,7 @@ def build_output_json(
     standard_source,
     metrics,
     status,
+    confidence,
     observations,
     segmentation=None,
     quality_notes=None,
@@ -866,12 +901,14 @@ def build_output_json(
     return {
         "action": action,
         "angleID": angle_id,
+        "comparisonVersion": COMPARISON_VERSION,
         "inputType": input_type,
         "patientSource": patient_source,
         "standardSource": standard_source,
         "comparisonMode": "segmented" if segmentation and segmentation.get("used") else "full_curve",
         "segmentation": segmentation,
         "status": status,
+        "confidence": confidence,
         "engineeringThresholds": build_threshold_summary(),
         "metrics": metrics,
         "qualityNotes": quality_notes or [],
@@ -897,11 +934,13 @@ def write_txt(path, data):
         "",
         f"Action: {data['action']}",
         f"Angle ID: {data['angleID']}",
+        f"Comparison version: {data.get('comparisonVersion')}",
         f"Input type: {data['inputType']}",
         f"Patient source: {data['patientSource']}",
         f"Standard source: {data['standardSource']}",
         f"Comparison mode: {data.get('comparisonMode', 'full_curve')}",
         f"Status: {data['status']}",
+        f"Confidence: {data.get('confidence')}",
         "",
     ]
 
@@ -1104,7 +1143,9 @@ def write_metrics_csv(path, data):
     for key, value in data.get("engineeringThresholds", {}).items():
         rows.append({"section": "engineeringThresholds", "name": key, "value": value})
     rows.append({"section": "classification", "name": "status", "value": data.get("status")})
+    rows.append({"section": "classification", "name": "confidence", "value": data.get("confidence")})
     rows.append({"section": "classification", "name": "comparisonMode", "value": data.get("comparisonMode")})
+    rows.append({"section": "metadata", "name": "comparisonVersion", "value": data.get("comparisonVersion")})
     write_csv_dicts(path, ["section", "name", "value"], rows)
 
 
@@ -1177,6 +1218,7 @@ def write_html_report(path, data, patient_rows, standard_rows, aligned_segments)
     metrics = data["metrics"]
     cards = [
         ("Status", data["status"]),
+        ("Confidence", data.get("confidence", "unknown")),
         ("Comparison", data.get("comparisonMode", "full_curve")),
         ("RMSE", f"{metrics['rmse']} deg"),
         ("Amplitude diff", f"{metrics['amplitudeDifference']} deg"),
@@ -1301,6 +1343,7 @@ def main():
         raise SystemExit(f"ERROR: failed to compare patient curve: {exc}")
 
     status = classify_status(metrics)
+    confidence = estimate_confidence(args.action, metrics, segmentation)
     observations = generate_observations(args.action, metrics, segmentation)
     quality_notes = generate_quality_notes(args.action, metrics, segmentation)
     output = build_output_json(
@@ -1311,6 +1354,7 @@ def main():
         args.standard_csv,
         metrics,
         status,
+        confidence,
         observations,
         segmentation,
         quality_notes,
@@ -1335,6 +1379,7 @@ def main():
         if segmentation.get("fallbackReason"):
             print(f"Segmentation fallback: {segmentation['fallbackReason']}")
     print(f"Status: {status}")
+    print(f"Confidence: {confidence}")
     print(f"RMSE: {metrics['rmse']} deg")
     print(f"Amplitude difference: {metrics['amplitudeDifference']} deg")
     print(f"Outside standard band percent: {metrics['outsideStandardBandPercent']}")

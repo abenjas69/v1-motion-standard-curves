@@ -1,0 +1,69 @@
+AI-Assisted Motion Curve Recommendation
+
+Action: walking
+Angle ID: left_knee
+Comparison version: v0.3-segmented-visual-exports
+Input type: api
+Patient source: http://113.44.220.94:3000/measurements/33
+Standard source: output_python\normal_knee_curve.csv
+Comparison mode: segmented
+Status: significant_deviation
+Confidence: low
+
+Segmentation:
+- Requested mode: auto
+- Method: local_minima_cycles
+- Label: cycles
+- Attempted: True
+- Used: True
+- Segments detected: 23
+- Segments used: 10
+- Segments rejected: 13
+- Average segment duration: 2.409 s
+- Fallback reason: None
+
+Segment metric summary:
+- Segment RMSE mean: 61.894193 deg
+- Segment RMSE std: 13.772658 deg
+- Segment amplitude difference mean: 32.900129 deg
+- Segment peak angle difference mean: 55.821928 deg
+- Segment outside standard band mean: 92.376238
+
+Key metrics:
+- Patient peak angle: 86.367625 deg
+- Standard peak angle: 61.363057 deg
+- Peak angle difference: 25.004568 deg
+- Patient min angle: 60.572355 deg
+- Standard min angle: 7.586953 deg
+- Min angle difference: 52.985402 deg
+- Patient amplitude: 25.79527 deg
+- Standard amplitude: 53.776104 deg
+- Amplitude difference: -27.980834 deg
+- MAE: 48.643373 deg
+- RMSE: 50.228242 deg
+- Max absolute deviation: 60.853467 deg
+- Mean signed deviation: 48.643373 deg
+- Correlation: 0.833339
+- Outside standard band percent: 100.0
+
+Observations:
+- The comparison used 10 detected cycles from the patient curve.
+- Lower movement amplitude may suggest reduced walking range of motion.
+- The walking curve differs from the standard curve shape.
+- A notable portion of the curve is outside the healthy standard deviation band.
+- The patient curve is generally above the standard curve.
+
+Quality notes:
+- Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition.
+- Many detected segments were rejected by engineering filters. Inspect the raw patient signal and segmentation settings.
+
+Recommendation:
+The walking curve shows significant deviation from the current healthy reference. The comparison used 10 detected cycles from the patient curve. Lower movement amplitude may suggest reduced walking range of motion. The walking curve differs from the standard curve shape. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally above the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.
+
+Doctor review note:
+This is AI-assisted analysis and should be reviewed by a doctor.
+
+Limitations:
+- This output is not a medical diagnosis.
+- The analysis is based only on motion curve data.
+- The result should be interpreted by a qualified clinician.
