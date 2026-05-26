@@ -1,0 +1,62 @@
+AI-Assisted Motion Curve Recommendation
+
+Action: squat
+Angle ID: left_knee
+Input type: csv
+Patient source: output_squat_python_new_data\standard_single_repetition.csv
+Standard source: output_squat_python_new_data\standard_squat_curve.csv
+Comparison mode: segmented
+Status: normal
+
+Segmentation:
+- Requested mode: auto
+- Method: peak_centered_repetitions
+- Label: repetitions
+- Attempted: True
+- Used: True
+- Segments detected: 1
+- Segments used: 1
+- Segments rejected: 0
+- Average segment duration: 2.704996 s
+- Fallback reason: None
+
+Segment metric summary:
+- Segment RMSE mean: 0.150996 deg
+- Segment RMSE std: 0.0 deg
+- Segment amplitude difference mean: -0.167833 deg
+- Segment peak angle difference mean: -0.167833 deg
+- Segment outside standard band mean: 0.0
+
+Key metrics:
+- Patient peak angle: 102.716622 deg
+- Standard peak angle: 102.884455 deg
+- Peak angle difference: -0.167833 deg
+- Patient min angle: 7.985524 deg
+- Standard min angle: 7.985524 deg
+- Min angle difference: 0.0 deg
+- Patient amplitude: 94.731098 deg
+- Standard amplitude: 94.898931 deg
+- Amplitude difference: -0.167833 deg
+- MAE: 0.132663 deg
+- RMSE: 0.150996 deg
+- Max absolute deviation: 0.317902 deg
+- Mean signed deviation: 0.000108 deg
+- Correlation: 0.999998
+- Outside standard band percent: 0.0
+
+Observations:
+- The comparison used 1 detected repetitions from the patient curve.
+
+Quality notes:
+- Few valid segments were available. The comparison may be sensitive to noise or incomplete execution.
+
+Recommendation:
+The squat curve is close to the current healthy reference. The comparison used 1 detected repetitions from the patient curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.
+
+Doctor review note:
+This is AI-assisted analysis and should be reviewed by a doctor.
+
+Limitations:
+- This output is not a medical diagnosis.
+- The analysis is based only on motion curve data.
+- The result should be interpreted by a qualified clinician.

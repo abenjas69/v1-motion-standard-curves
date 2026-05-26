@@ -15,6 +15,13 @@ The script writes:
 - a structured JSON result;
 - a readable TXT report for doctors or the web team.
 
+It can also write optional analysis outputs:
+
+- patient-vs-standard HTML visualization;
+- normalized patient average curve CSV;
+- detected segment/repetition summary CSV;
+- key metrics CSV.
+
 It does not regenerate standard curves. It loads existing standard CSV files produced by `Walk.py`, `Squat.py`, or `Upstairs.py`.
 
 For walking and squat, the script can also segment a complete patient session before comparison:
@@ -53,6 +60,13 @@ Optional segmentation control:
 - `--segment-patient never`: compare the full patient curve directly.
 - `--segment-patient always`: require segmentation and fail if no valid segments are detected.
 
+Optional output files:
+
+- `--out-html`: patient-vs-standard visual report.
+- `--out-average-csv`: normalized average patient curve, standard curve, and deviation per percent point.
+- `--out-segments-csv`: detected cycle/repetition summary and per-segment metrics.
+- `--out-metrics-csv`: compact key-value metrics table for backend import or quick review.
+
 The default API base URL is:
 
 ```text
@@ -75,7 +89,11 @@ python generate_recommendation_from_curves.py \
   --patient-csv path/to/patient_curve.csv \
   --standard-csv output_python/normal_knee_curve.csv \
   --out-json output/recommendation_walking.json \
-  --out-txt output/recommendation_walking.txt
+  --out-txt output/recommendation_walking.txt \
+  --out-html output/recommendation_walking.html \
+  --out-average-csv output/recommendation_walking_average.csv \
+  --out-segments-csv output/recommendation_walking_segments.csv \
+  --out-metrics-csv output/recommendation_walking_metrics.csv
 ```
 
 Squat:
@@ -123,7 +141,9 @@ The JSON contains:
 - comparison mode;
 - segmentation summary;
 - status;
+- engineering thresholds;
 - numeric metrics;
+- quality notes;
 - observations;
 - recommendation text;
 - doctor review note;
@@ -152,6 +172,14 @@ They are not clinically validated.
 
 When segmentation is used, the main status is calculated from the average normalized patient cycle/repetition compared with the standard curve. The JSON also includes per-segment metric summaries so the web team or doctors can inspect variability between cycles/repetitions.
 
+The HTML visualization shows:
+
+- the standard curve;
+- the patient average curve;
+- the healthy standard-deviation band when available;
+- individual patient segments when segmentation was used;
+- observations and data-quality notes.
+
 ## 7. Limitations
 
 - This is not a medical diagnosis.
@@ -168,6 +196,7 @@ When segmentation is used, the main status is calculated from the average normal
 - Use more clinical data.
 - Validate thresholds with doctors.
 - Integrate directly with V2/M2.
-- Add patient-vs-standard visualization output.
+- Improve the HTML report with interactive charts if M2 needs richer UI.
+- Store normalized comparison curves and segment summaries directly in V2.
 - Optionally add LLM text generation later.
 - Optionally accept chart images later if the web team needs that workflow.

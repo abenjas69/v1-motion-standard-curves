@@ -1,5 +1,6 @@
 import argparse
 import csv
+from html import escape
 import json
 import math
 import os
@@ -70,6 +71,10 @@ def parse_args():
     parser.add_argument("--angle-id", default="left_knee")
     parser.add_argument("--out-json", required=True)
     parser.add_argument("--out-txt", required=True)
+    parser.add_argument("--out-html", help="Optional patient-vs-standard HTML visualization output path.")
+    parser.add_argument("--out-average-csv", help="Optional normalized patient-vs-standard average curve CSV output path.")
+    parser.add_argument("--out-segments-csv", help="Optional detected segment/repetition summary CSV output path.")
+    parser.add_argument("--out-metrics-csv", help="Optional key metrics CSV output path.")
     parser.add_argument("--grid-points", type=int, default=101)
     parser.add_argument("--smooth-window", type=int, default=5)
     parser.add_argument(
@@ -534,7 +539,10 @@ def segment_patient_curve(curve, action, segment_mode, smooth_window):
     summary["segmentsUsed"] = len(segments)
     summary["averageSegmentDurationSeconds"] = round(sum(durations) / len(durations), 6) if durations else None
     summary["segmentDurationSeconds"] = [round(duration, 6) for duration in durations]
-    summary["segments"] = [strip_segment_rows(record) for record in segments]
+    summary["segments"] = [
+        {**strip_segment_rows(record), "usedSegmentIndex": index}
+        for index, record in enumerate(segments, start=1)
+    ]
     return [record["rows"] for record in segments], summary
 
 
@@ -686,11 +694,11 @@ def compare_patient_to_standard(patient_curve, standard_rows, action, segment_mo
             )
         segmentation["segmentMetricSummary"] = summarize_segment_metrics(segment_metrics)
         segmentation["segmentMetrics"] = segment_metrics
-        return patient_rows, metrics, segmentation
+        return patient_rows, metrics, segmentation, aligned_segments
 
     patient_rows = align_patient_to_standard(patient_curve, standard_rows, smooth_window)
     metrics = compute_metrics(patient_rows, standard_rows)
-    return patient_rows, metrics, segmentation
+    return patient_rows, metrics, segmentation, []
 
 
 def classify_status(metrics):
@@ -793,6 +801,56 @@ def generate_recommendation_text(action, status, metrics, observations):
     )
 
 
+def build_threshold_summary():
+    return {
+        "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+        "normalRmseMax": NORMAL_RMSE_MAX,
+        "mildRmseMax": MILD_RMSE_MAX,
+        "normalAmplitudeDifferenceMax": NORMAL_AMPLITUDE_DIFF_MAX,
+        "mildAmplitudeDifferenceMax": MILD_AMPLITUDE_DIFF_MAX,
+        "normalOutsideStandardBandMax": NORMAL_OUTSIDE_BAND_MAX,
+        "mildOutsideStandardBandMax": MILD_OUTSIDE_BAND_MAX,
+    }
+
+
+def generate_quality_notes(action, metrics, segmentation=None):
+    notes = []
+
+    if abs(metrics.get("meanSignedDeviation") or 0.0) > 25.0:
+        notes.append(
+            "Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition."
+        )
+    if abs(metrics.get("peakAngleDifference") or 0.0) > 40.0:
+        notes.append(
+            "Large peak-angle difference detected. Review the raw curve visually before interpreting this as a movement finding."
+        )
+
+    if segmentation and segmentation.get("used"):
+        detected = segmentation.get("segmentsDetected") or 0
+        rejected = segmentation.get("segmentsRejected") or 0
+        if detected and rejected / detected > 0.4:
+            notes.append(
+                "Many detected segments were rejected by engineering filters. Inspect the raw patient signal and segmentation settings."
+            )
+        if segmentation.get("segmentsUsed", 0) < 3 and action in ("walking", "squat"):
+            notes.append(
+                "Few valid segments were available. The comparison may be sensitive to noise or incomplete execution."
+            )
+    elif segmentation and segmentation.get("fallbackReason"):
+        notes.append(
+            "The comparison used the full patient curve because segmentation was not available or not appropriate for this action."
+        )
+
+    if action == "upstairs":
+        notes.append(
+            "Upstairs is currently compared as a full stair-climbing action because the current standard curve is full-action based."
+        )
+
+    if not notes:
+        notes.append("No major engineering data-quality warnings were detected.")
+    return notes
+
+
 def build_output_json(
     action,
     angle_id,
@@ -803,6 +861,7 @@ def build_output_json(
     status,
     observations,
     segmentation=None,
+    quality_notes=None,
 ):
     return {
         "action": action,
@@ -813,7 +872,9 @@ def build_output_json(
         "comparisonMode": "segmented" if segmentation and segmentation.get("used") else "full_curve",
         "segmentation": segmentation,
         "status": status,
+        "engineeringThresholds": build_threshold_summary(),
         "metrics": metrics,
+        "qualityNotes": quality_notes or [],
         "observations": observations,
         "recommendationText": generate_recommendation_text(action, status, metrics, observations),
         "doctorReviewNote": DOCTOR_REVIEW_NOTE,
@@ -899,6 +960,8 @@ def write_txt(path, data):
         ]
     )
     lines.extend(f"- {observation}" for observation in data["observations"])
+    lines.extend(["", "Quality notes:"])
+    lines.extend(f"- {note}" for note in data.get("qualityNotes", []))
     lines.extend(
         [
             "",
@@ -915,6 +978,294 @@ def write_txt(path, data):
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
         f.write("\n")
+
+
+def format_csv_value(value):
+    if value is None:
+        return ""
+    if isinstance(value, float):
+        return round(value, 6)
+    return value
+
+
+def write_csv_dicts(path, fieldnames, rows):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: format_csv_value(row.get(field)) for field in fieldnames})
+
+
+def write_average_curve_csv(path, patient_rows, standard_rows):
+    rows = []
+    for patient_row, standard_row in zip(patient_rows, standard_rows):
+        lower = standard_row.get("lower")
+        upper = standard_row.get("upper")
+        patient_angle = patient_row["angle"]
+        outside_band = ""
+        if lower is not None and upper is not None:
+            outside_band = patient_angle < lower or patient_angle > upper
+        rows.append(
+            {
+                "percent": standard_row["percent"],
+                "patient_angle": patient_angle,
+                "standard_angle": standard_row["standard_angle"],
+                "deviation": patient_angle - standard_row["standard_angle"],
+                "standard_lower_band": lower,
+                "standard_upper_band": upper,
+                "outside_standard_band": outside_band,
+            }
+        )
+
+    write_csv_dicts(
+        path,
+        [
+            "percent",
+            "patient_angle",
+            "standard_angle",
+            "deviation",
+            "standard_lower_band",
+            "standard_upper_band",
+            "outside_standard_band",
+        ],
+        rows,
+    )
+
+
+def write_segments_csv(path, data):
+    segmentation = data.get("segmentation") or {}
+    segments = segmentation.get("segments") or []
+    metrics_by_used_index = {
+        metric["index"]: metric.get("metrics", {})
+        for metric in segmentation.get("segmentMetrics", [])
+    }
+
+    rows = []
+    for segment in segments:
+        used_index = segment.get("usedSegmentIndex")
+        metric = metrics_by_used_index.get(used_index, {})
+        rows.append(
+            {
+                "used_segment_index": used_index,
+                "detected_segment_index": segment.get("index"),
+                "source": segment.get("source"),
+                "start_time_seconds": segment.get("startTimeSeconds"),
+                "end_time_seconds": segment.get("endTimeSeconds"),
+                "duration_seconds": segment.get("durationSeconds"),
+                "point_count": segment.get("pointCount"),
+                "amplitude_degrees": segment.get("amplitudeDegrees"),
+                "peak_angle": segment.get("peakAngle"),
+                "status": next(
+                    (
+                        item.get("status")
+                        for item in segmentation.get("segmentMetrics", [])
+                        if item.get("index") == used_index
+                    ),
+                    "",
+                ),
+                "rmse": metric.get("rmse"),
+                "mae": metric.get("mae"),
+                "peak_angle_difference": metric.get("peakAngleDifference"),
+                "amplitude_difference": metric.get("amplitudeDifference"),
+                "outside_standard_band_percent": metric.get("outsideStandardBandPercent"),
+            }
+        )
+
+    write_csv_dicts(
+        path,
+        [
+            "used_segment_index",
+            "detected_segment_index",
+            "source",
+            "start_time_seconds",
+            "end_time_seconds",
+            "duration_seconds",
+            "point_count",
+            "amplitude_degrees",
+            "peak_angle",
+            "status",
+            "rmse",
+            "mae",
+            "peak_angle_difference",
+            "amplitude_difference",
+            "outside_standard_band_percent",
+        ],
+        rows,
+    )
+
+
+def write_metrics_csv(path, data):
+    rows = []
+    for key, value in data.get("metrics", {}).items():
+        rows.append({"section": "metrics", "name": key, "value": value})
+    for key, value in (data.get("segmentation", {}).get("segmentMetricSummary") or {}).items():
+        rows.append({"section": "segmentMetricSummary", "name": key, "value": value})
+    for key, value in data.get("engineeringThresholds", {}).items():
+        rows.append({"section": "engineeringThresholds", "name": key, "value": value})
+    rows.append({"section": "classification", "name": "status", "value": data.get("status")})
+    rows.append({"section": "classification", "name": "comparisonMode", "value": data.get("comparisonMode")})
+    write_csv_dicts(path, ["section", "name", "value"], rows)
+
+
+def chart_points(rows, value_key, x_min, x_max, y_min, y_max, width, height, pad):
+    points = []
+    x_span = x_max - x_min or 1.0
+    y_span = y_max - y_min or 1.0
+    for row in rows:
+        value = row.get(value_key)
+        if value is None:
+            continue
+        x = pad + ((row["percent"] - x_min) / x_span) * (width - pad * 2)
+        y = height - pad - ((value - y_min) / y_span) * (height - pad * 2)
+        points.append(f"{x:.2f},{y:.2f}")
+    return " ".join(points)
+
+
+def band_polygon_points(standard_rows, x_min, x_max, y_min, y_max, width, height, pad):
+    upper_rows = [{"percent": row["percent"], "value": row.get("upper")} for row in standard_rows]
+    lower_rows = [{"percent": row["percent"], "value": row.get("lower")} for row in reversed(standard_rows)]
+    upper = chart_points(upper_rows, "value", x_min, x_max, y_min, y_max, width, height, pad)
+    lower = chart_points(lower_rows, "value", x_min, x_max, y_min, y_max, width, height, pad)
+    return f"{upper} {lower}".strip()
+
+
+def svg_axis_labels(x_min, x_max, y_min, y_max, width, height, pad):
+    labels = []
+    for percent in [0, 25, 50, 75, 100]:
+        x = pad + ((percent - x_min) / (x_max - x_min or 1.0)) * (width - pad * 2)
+        labels.append(f'<line x1="{x:.2f}" y1="{pad}" x2="{x:.2f}" y2="{height - pad}" class="grid" />')
+        labels.append(f'<text x="{x:.2f}" y="{height - 18}" class="tick" text-anchor="middle">{percent}%</text>')
+    for value in [y_min, (y_min + y_max) / 2.0, y_max]:
+        y = height - pad - ((value - y_min) / (y_max - y_min or 1.0)) * (height - pad * 2)
+        labels.append(f'<line x1="{pad}" y1="{y:.2f}" x2="{width - pad}" y2="{y:.2f}" class="grid" />')
+        labels.append(f'<text x="{pad - 10}" y="{y + 4:.2f}" class="tick" text-anchor="end">{value:.1f}</text>')
+    return "\n".join(labels)
+
+
+def write_html_report(path, data, patient_rows, standard_rows, aligned_segments):
+    width = 1000
+    height = 560
+    pad = 70
+    x_min = 0.0
+    x_max = 100.0
+
+    values = [row["angle"] for row in patient_rows] + [row["standard_angle"] for row in standard_rows]
+    for row in standard_rows:
+        if row.get("lower") is not None:
+            values.append(row["lower"])
+        if row.get("upper") is not None:
+            values.append(row["upper"])
+    for segment in aligned_segments:
+        values.extend(row["angle"] for row in segment)
+
+    y_min = math.floor((min(values) - 5.0) / 5.0) * 5.0
+    y_max = math.ceil((max(values) + 5.0) / 5.0) * 5.0
+
+    patient_plot_rows = [{"percent": row["percent"], "patient": row["angle"]} for row in patient_rows]
+    standard_plot_rows = [{"percent": row["percent"], "standard": row["standard_angle"]} for row in standard_rows]
+    patient_points = chart_points(patient_plot_rows, "patient", x_min, x_max, y_min, y_max, width, height, pad)
+    standard_points = chart_points(standard_plot_rows, "standard", x_min, x_max, y_min, y_max, width, height, pad)
+    band_points = band_polygon_points(standard_rows, x_min, x_max, y_min, y_max, width, height, pad)
+
+    segment_lines = []
+    for segment in aligned_segments:
+        segment_plot_rows = [{"percent": row["percent"], "angle": row["angle"]} for row in segment]
+        segment_points = chart_points(segment_plot_rows, "angle", x_min, x_max, y_min, y_max, width, height, pad)
+        segment_lines.append(f'<polyline points="{segment_points}" class="segment-line" />')
+
+    metrics = data["metrics"]
+    cards = [
+        ("Status", data["status"]),
+        ("Comparison", data.get("comparisonMode", "full_curve")),
+        ("RMSE", f"{metrics['rmse']} deg"),
+        ("Amplitude diff", f"{metrics['amplitudeDifference']} deg"),
+        ("Outside band", f"{metrics['outsideStandardBandPercent']}%"),
+    ]
+    card_html = "\n".join(
+        f'<div class="card"><div class="label">{escape(label)}</div><div class="value">{escape(str(value))}</div></div>'
+        for label, value in cards
+    )
+    observation_html = "\n".join(f"<li>{escape(item)}</li>" for item in data.get("observations", []))
+    quality_html = "\n".join(f"<li>{escape(item)}</li>" for item in data.get("qualityNotes", []))
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient vs Standard Curve - {escape(data['action'])}</title>
+  <style>
+    body {{ margin: 0; font-family: Arial, sans-serif; color: #172033; background: #f5f7fb; }}
+    main {{ max-width: 1180px; margin: 0 auto; padding: 28px; }}
+    h1 {{ margin: 0 0 6px; font-size: 30px; }}
+    .subtitle {{ margin: 0 0 22px; color: #526176; }}
+    .cards {{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }}
+    .card {{ background: #fff; border: 1px solid #d9e2ee; border-radius: 8px; padding: 16px; }}
+    .label {{ color: #607086; font-size: 13px; margin-bottom: 8px; }}
+    .value {{ font-weight: 700; font-size: 20px; }}
+    .panel {{ background: #fff; border: 1px solid #d9e2ee; border-radius: 8px; padding: 18px; margin-bottom: 18px; }}
+    .legend {{ display: flex; gap: 20px; flex-wrap: wrap; margin: 8px 0 16px; color: #33445c; }}
+    .key {{ display: inline-flex; align-items: center; gap: 8px; }}
+    .swatch {{ width: 28px; height: 4px; display: inline-block; }}
+    svg {{ width: 100%; height: auto; display: block; background: #fff; }}
+    .grid {{ stroke: #e5eaf1; stroke-width: 1; }}
+    .axis {{ stroke: #a9b6c8; stroke-width: 1.2; }}
+    .tick {{ fill: #526176; font-size: 12px; }}
+    .band {{ fill: #8ec5ff; opacity: 0.22; }}
+    .segment-line {{ fill: none; stroke: #7d8796; stroke-width: 1.1; opacity: 0.22; }}
+    .standard-line {{ fill: none; stroke: #d64550; stroke-width: 4; }}
+    .patient-line {{ fill: none; stroke: #0b6da8; stroke-width: 4; }}
+    .section-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }}
+    li {{ margin-bottom: 8px; }}
+    @media (max-width: 900px) {{ .cards, .section-grid {{ grid-template-columns: 1fr; }} }}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Patient vs Standard Curve: {escape(data['action'])} / {escape(data['angleID'])}</h1>
+  <p class="subtitle">AI-assisted motion analysis. This is not a medical diagnosis and should be reviewed by a doctor.</p>
+  <section class="cards">{card_html}</section>
+  <section class="panel">
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:#d64550"></span>Standard curve</span>
+      <span class="key"><span class="swatch" style="background:#0b6da8"></span>Patient average</span>
+      <span class="key"><span class="swatch" style="background:#8ec5ff"></span>Standard band</span>
+      <span class="key"><span class="swatch" style="background:#7d8796"></span>Patient segments</span>
+    </div>
+    <svg viewBox="0 0 {width} {height}" role="img" aria-label="Patient curve compared with standard curve">
+      {svg_axis_labels(x_min, x_max, y_min, y_max, width, height, pad)}
+      <line x1="{pad}" y1="{height - pad}" x2="{width - pad}" y2="{height - pad}" class="axis" />
+      <line x1="{pad}" y1="{pad}" x2="{pad}" y2="{height - pad}" class="axis" />
+      <text x="{width / 2}" y="{height - 8}" class="tick" text-anchor="middle">Normalized action progress (%)</text>
+      <text transform="translate(20 {height / 2}) rotate(-90)" class="tick" text-anchor="middle">Angle (deg)</text>
+      <polygon points="{band_points}" class="band" />
+      {"".join(segment_lines)}
+      <polyline points="{standard_points}" class="standard-line" />
+      <polyline points="{patient_points}" class="patient-line" />
+    </svg>
+  </section>
+  <section class="section-grid">
+    <div class="panel">
+      <h2>Observations</h2>
+      <ul>{observation_html}</ul>
+    </div>
+    <div class="panel">
+      <h2>Quality Notes</h2>
+      <ul>{quality_html}</ul>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Recommendation</h2>
+    <p>{escape(data['recommendationText'])}</p>
+  </section>
+</main>
+</body>
+</html>
+"""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
 
 
 def main():
@@ -939,7 +1290,7 @@ def main():
         patient_source = f"{args.base_url.rstrip('/')}/{args.patient_session_id}"
 
     try:
-        _patient_rows, metrics, segmentation = compare_patient_to_standard(
+        patient_rows, metrics, segmentation, aligned_segments = compare_patient_to_standard(
             patient_curve,
             standard_rows,
             args.action,
@@ -951,6 +1302,7 @@ def main():
 
     status = classify_status(metrics)
     observations = generate_observations(args.action, metrics, segmentation)
+    quality_notes = generate_quality_notes(args.action, metrics, segmentation)
     output = build_output_json(
         args.action,
         args.angle_id,
@@ -961,10 +1313,19 @@ def main():
         status,
         observations,
         segmentation,
+        quality_notes,
     )
 
     write_json(args.out_json, output)
     write_txt(args.out_txt, output)
+    if args.out_html:
+        write_html_report(args.out_html, output, patient_rows, standard_rows, aligned_segments)
+    if args.out_average_csv:
+        write_average_curve_csv(args.out_average_csv, patient_rows, standard_rows)
+    if args.out_segments_csv:
+        write_segments_csv(args.out_segments_csv, output)
+    if args.out_metrics_csv:
+        write_metrics_csv(args.out_metrics_csv, output)
 
     print("Done.")
     print(f"Action: {args.action}")
@@ -979,6 +1340,14 @@ def main():
     print(f"Outside standard band percent: {metrics['outsideStandardBandPercent']}")
     print(f"JSON: {args.out_json}")
     print(f"TXT: {args.out_txt}")
+    if args.out_html:
+        print(f"HTML: {args.out_html}")
+    if args.out_average_csv:
+        print(f"Average CSV: {args.out_average_csv}")
+    if args.out_segments_csv:
+        print(f"Segments CSV: {args.out_segments_csv}")
+    if args.out_metrics_csv:
+        print(f"Metrics CSV: {args.out_metrics_csv}")
 
 
 if __name__ == "__main__":
