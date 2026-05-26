@@ -23,6 +23,7 @@ outputs/
   walking/
   squat/
   upstairs/
+  recommendations/
 
 docs/
   Phase II analysis and implementation notes
@@ -74,6 +75,17 @@ python scripts/Squat.py --out-dir outputs/squat
 python scripts/Upstairs.py --out-dir outputs/upstairs
 ```
 
+Generate an AI-assisted rule-based recommendation from curve data:
+
+```bash
+python generate_recommendation_from_curves.py \
+  --action walking \
+  --patient-session-id 33 \
+  --standard-csv outputs/walking/normal_knee_curve.csv \
+  --out-json outputs/recommendations/recommendation_walking_session33.json \
+  --out-txt outputs/recommendations/recommendation_walking_session33.txt
+```
+
 The scripts use:
 
 ```text
@@ -99,6 +111,6 @@ These are the best visual validation files because they overlay the raw curves w
 - `Walk.py` is kept as the walking-only reference.
 - `Squat.py` is separate and uses squat-specific repetition terminology.
 - `Upstairs.py` is separate and uses full-action normalization.
-- AI recommendations are intentionally postponed.
-- Patient-vs-standard comparison is a future step.
-
+- `generate_recommendation_from_curves.py` compares patient curves against saved standard curves and outputs preliminary JSON/TXT advice.
+- Recommendation thresholds are preliminary engineering values and are not clinically validated.
+- The recommendation output is AI-assisted support only, not a medical diagnosis.

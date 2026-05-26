@@ -1,0 +1,41 @@
+AI-Assisted Motion Curve Recommendation
+
+Action: walking
+Angle ID: left_knee
+Input type: api
+Patient source: http://113.44.220.94:3000/measurements/33
+Standard source: output_python\normal_knee_curve.csv
+Status: significant_deviation
+
+Key metrics:
+- Patient peak angle: 125.94379 deg
+- Standard peak angle: 61.363057 deg
+- Peak angle difference: 64.580733 deg
+- Patient min angle: 0.386667 deg
+- Standard min angle: 7.586953 deg
+- Min angle difference: -7.200286 deg
+- Patient amplitude: 125.557124 deg
+- Standard amplitude: 53.776104 deg
+- Amplitude difference: 71.78102 deg
+- MAE: 40.520318 deg
+- RMSE: 46.897613 deg
+- Max absolute deviation: 87.394745 deg
+- Mean signed deviation: 33.455322 deg
+- Correlation: 0.462233
+- Outside standard band percent: 96.039604
+
+Observations:
+- The walking curve differs from the standard curve shape.
+- A notable portion of the curve is outside the healthy standard deviation band.
+- The patient curve is generally above the standard curve.
+
+Recommendation:
+The walking curve shows significant deviation from the current healthy reference. The walking curve differs from the standard curve shape. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally above the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.
+
+Doctor review note:
+This is AI-assisted analysis and should be reviewed by a doctor.
+
+Limitations:
+- This output is not a medical diagnosis.
+- The analysis is based only on motion curve data.
+- The result should be interpreted by a qualified clinician.
