@@ -1,0 +1,2 @@
+﻿total_sessions,used_sessions,excluded_sessions,outlier_method,lower_bound_seconds,upper_bound_seconds,min_used_seconds,max_used_seconds,q1_seconds,median_seconds,q3_seconds,average_action_seconds,sd_action_seconds
+26,26,0,IQR x 1.5,8.288375,10.727375,8.638,10.499,9.203,9.577,9.81275,9.543577,0.481496

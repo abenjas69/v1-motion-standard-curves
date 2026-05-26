@@ -1,0 +1,2 @@
+﻿total_cycles,used_cycles,excluded_cycles,outlier_method,lower_bound_seconds,upper_bound_seconds,min_used_seconds,max_used_seconds,q1_seconds,median_seconds,q3_seconds,average_cycle_seconds,sd_cycle_seconds,average_cycles_per_minute
+256,244,12,IQR x 1.5,0.945125,1.264125,0.959,1.26,1.06475,1.11,1.1445,1.099791,0.0704,54.555821

@@ -1,0 +1,3 @@
+﻿session_id,cycle_no_in_session,points,start_time,end_time,duration_seconds,max_angle,peak_angle,peak_percent,amplitude,reject_reason
+91,5,11,2026-05-22T14:47:05.184000+00:00,2026-05-22T14:47:06.128000+00:00,0.944,20.8,20.8,57.097458,17.44,peak_too_low
+93,5,11,2026-05-22T14:53:17.334000+00:00,2026-05-22T14:53:18.474000+00:00,1.14,55.6,55.6,68.421053,47.73,peak_too_late

@@ -1,0 +1,3 @@
+﻿session_id,angle_points,event_type,local_events,valid_repetitions_before_edge_trim,edge_trimmed_repetitions,repetitions_after_edge_trim,shape_filtered_repetitions,valid_repetitions,start_time,end_time,duration_seconds
+116,110,minima,4,3,0,3,0,3,2026-05-22T16:18:21.724000+00:00,2026-05-22T16:18:32.644000+00:00,10.92
+118,99,minima,4,3,0,3,0,3,2026-05-22T16:29:39.346000+00:00,2026-05-22T16:29:49.217000+00:00,9.871

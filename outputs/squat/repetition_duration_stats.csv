@@ -1,0 +1,2 @@
+﻿total_repetitions,used_repetitions,excluded_repetitions,outlier_method,lower_bound_seconds,upper_bound_seconds,min_used_seconds,max_used_seconds,q1_seconds,median_seconds,q3_seconds,average_repetition_seconds,sd_repetition_seconds,average_repetitions_per_minute
+6,6,0,IQR x 1.5,2.300625,3.635625,2.43,3.54,2.80125,2.8725,3.135,2.9525,0.381179,20.321761
