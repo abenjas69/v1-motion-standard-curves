@@ -4,6 +4,8 @@
 
 `generate_recommendation_from_curves.py` compares one patient/session motion curve against a saved local standard curve and generates AI-assisted, rule-based advice.
 
+`evaluate_recommendation_accuracy.py` evaluates severity accuracy when labeled sessions are available.
+
 It supports:
 
 - `walking`
@@ -189,6 +191,7 @@ The JSON contains:
 - quality notes;
 - observations;
 - recommendation text;
+- clinical advice draft;
 - doctor review note;
 - limitations.
 
@@ -210,6 +213,14 @@ low
 ```
 
 `comparisonVersion` is included so V2/M2 can track which recommendation algorithm produced the result.
+
+The current comparison version is:
+
+```text
+v0.6-clinical-advice-accuracy
+```
+
+`clinicalAdviceDraft` is a clinician-review support message. It is not a diagnosis, prescription, or standalone treatment plan.
 
 ## 6. How Status Is Calculated
 
@@ -235,12 +246,63 @@ The HTML visualization shows:
 
 Confidence is an engineering confidence estimate, not a clinical confidence score. It is reduced when important data is missing, segmentation is weak, too many detected segments are rejected, or the patient curve appears strongly offset from the standard curve.
 
-## 7. Automated Tests
+## 7. Accuracy Evaluation
+
+Use this when S1/AuCloud or clinicians provide validated severity labels.
+
+Create a labels CSV with this structure:
+
+```csv
+action,session_id,severity_label,injury_location,notes
+walking,209,severe,knee,validated label example
+upstairs,219,severe,knee,validated label example
+squat,229,mild,knee,validated label example
+```
+
+Allowed `severity_label` values:
+
+```text
+normal
+mild
+severe
+```
+
+Run:
+
+```bash
+python evaluate_recommendation_accuracy.py \
+  --labels-csv data/labeled_sessions_template.csv \
+  --out-dir outputs/accuracy_analysis
+```
+
+The evaluator maps recommendation status to severity:
+
+```text
+normal -> normal
+mild_deviation -> mild
+significant_deviation -> severe
+unclear -> excluded from accuracy and reported separately
+```
+
+It writes:
+
+- `outputs/accuracy_analysis/accuracy_report.json`
+- `outputs/accuracy_analysis/accuracy_report.csv`
+- `outputs/accuracy_analysis/confusion_matrix.csv`
+- `outputs/accuracy_analysis/accuracy_report.md`
+
+The report includes overall severity accuracy, per-action accuracy, confusion matrix, macro precision/recall/F1, failed sessions, and unclear sessions.
+
+Injury location, such as `knee` or `ankle`, is stored as metadata only in this phase. The current module primarily uses `left_knee`, so it should not claim ankle-vs-knee diagnostic accuracy.
+
+Do not commit real labeled patient data to a public repository unless it is anonymized and explicitly approved for sharing.
+
+## 8. Automated Tests
 
 Run the local tests with:
 
 ```bash
-python -m unittest test_recommendation_module.py
+python -m unittest test_recommendation_module.py test_accuracy_evaluation.py
 ```
 
 The tests use only standard-library Python and temporary CSV files. They check:
@@ -250,8 +312,11 @@ The tests use only standard-library Python and temporary CSV files. They check:
 - JSON/TXT/HTML/CSV output generation;
 - `comparisonVersion`;
 - `confidence`.
+- severity label parsing;
+- severity accuracy calculation;
+- confusion matrix generation.
 
-## 8. Limitations
+## 9. Limitations
 
 - This is not a medical diagnosis.
 - The result is based only on motion curve data.
@@ -261,11 +326,13 @@ The tests use only standard-library Python and temporary CSV files. They check:
 - The first version does not use chart images.
 - Walking/squat segmentation uses preliminary engineering thresholds and should be visually validated.
 - Upstairs is currently compared as a full action because the current standard curve is full-action based.
+- Accuracy evaluation is severity-only in this phase.
 
-## 9. Future Improvements
+## 10. Future Improvements
 
 - Use more clinical data.
 - Validate thresholds with doctors.
+- Train a supervised model only after enough validated labeled sessions are available.
 - Integrate directly with V2/M2.
 - Improve the HTML report with interactive charts if M2 needs richer UI.
 - Store normalized comparison curves and segment summaries directly in V2.

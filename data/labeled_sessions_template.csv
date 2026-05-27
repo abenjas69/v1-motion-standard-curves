@@ -1,0 +1,4 @@
+action,session_id,severity_label,injury_location,notes
+walking,209,severe,knee,Example only: replace with clinician/S1 validated label
+upstairs,219,severe,knee,Example only: replace with clinician/S1 validated label
+squat,229,mild,knee,Example only: replace with clinician/S1 validated label

@@ -101,6 +101,7 @@ class RecommendationModuleTests(unittest.TestCase):
             self.assertEqual(output["comparisonVersion"], rec.COMPARISON_VERSION)
             self.assertEqual(output["confidence"], "high")
             self.assertEqual(output["componentStatus"]["overall"], "normal")
+            self.assertEqual(output["clinicalAdviceDraft"]["reviewPriority"], "routine_review")
             self.assertEqual(output["comparisonMode"], "full_curve")
             self.assertEqual(len(patient_rows), len(standard_rows))
             self.assertEqual(aligned_segments, [])

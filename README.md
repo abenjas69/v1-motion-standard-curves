@@ -28,6 +28,9 @@ outputs/
     upstairs/
     squat/
 
+data/
+  labeled_sessions_template.csv
+
 docs/
   Phase II analysis and implementation notes
 
@@ -101,6 +104,28 @@ http://113.44.220.94:3000/measurements
 
 as the default API endpoint.
 
+Evaluate severity accuracy from labeled sessions:
+
+```bash
+python evaluate_recommendation_accuracy.py \
+  --labels-csv data/labeled_sessions_template.csv \
+  --out-dir outputs/accuracy_analysis
+```
+
+The accuracy evaluator expects clinician/S1-validated labels with:
+
+```text
+action,session_id,severity_label,injury_location,notes
+```
+
+For this phase, the measured accuracy target is severity only:
+
+```text
+normal, mild, severe
+```
+
+Injury location, such as knee or ankle, is stored as metadata only. Do not use the current `left_knee` curve-only module to claim ankle-vs-knee diagnostic accuracy.
+
 ## Outputs To Review First
 
 Open these standard-curve validation files in a browser:
@@ -127,7 +152,9 @@ outputs/recommendations/squat/recommendation_squat_228.html
 - `Squat.py` is separate and uses squat-specific repetition terminology.
 - `Upstairs.py` is separate and uses full-action normalization.
 - `generate_recommendation_from_curves.py` compares patient curves against saved standard curves and outputs preliminary JSON/TXT/HTML/CSV advice.
-- Current recommendation algorithm version: `v0.5-robust-component-metrics`.
-- JSON output includes `status`, `confidence`, `componentStatus`, `metrics`, `segmentation`, `observations`, and `recommendationText`.
+- Current recommendation algorithm version: `v0.6-clinical-advice-accuracy`.
+- JSON output includes `status`, `confidence`, `componentStatus`, `metrics`, `segmentation`, `observations`, `recommendationText`, and `clinicalAdviceDraft`.
+- `evaluate_recommendation_accuracy.py` calculates severity accuracy, per-action accuracy, confusion matrix, macro precision/recall/F1, failed sessions, and unclear sessions.
 - Recommendation thresholds are preliminary engineering values and are not clinically validated.
 - The recommendation output is AI-assisted support only, not a medical diagnosis.
+- Real labeled patient data should not be committed to a public repository unless anonymized and approved for sharing.

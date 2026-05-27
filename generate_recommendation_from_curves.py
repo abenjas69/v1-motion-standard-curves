@@ -17,7 +17,7 @@ MILD_AMPLITUDE_DIFF_MAX = 25.0
 NORMAL_OUTSIDE_BAND_MAX = 20.0
 MILD_OUTSIDE_BAND_MAX = 50.0
 
-COMPARISON_VERSION = "v0.5-robust-component-metrics"
+COMPARISON_VERSION = "v0.6-clinical-advice-accuracy"
 
 # Preliminary engineering segmentation settings. These values are action-specific
 # starting points and should be validated visually with real patient data.
@@ -907,6 +907,59 @@ def generate_recommendation_text(action, status, metrics, observations):
     )
 
 
+def generate_clinical_advice_draft(action, status, component_status, metrics):
+    action_text = {
+        "walking": "walking",
+        "squat": "squat",
+        "upstairs": "stair-climbing",
+    }[action]
+    focus_areas = []
+
+    if component_status.get("rangeOfMotion") in ("mild_deviation", "significant_deviation"):
+        focus_areas.append("range_of_motion")
+    if component_status.get("shape") in ("mild_deviation", "significant_deviation"):
+        focus_areas.append("movement_pattern")
+    if component_status.get("verticalOffset") in ("mild_deviation", "significant_deviation"):
+        focus_areas.append("angle_calibration_or_baseline_offset")
+    if component_status.get("standardBand") in ("mild_deviation", "significant_deviation"):
+        focus_areas.append("deviation_from_healthy_reference_band")
+
+    if status == "normal":
+        review_priority = "routine_review"
+        draft_advice = (
+            f"The {action_text} curve is close to the current healthy reference. "
+            "A clinician may consider continuing the current rehabilitation plan and monitoring symptoms and function over time."
+        )
+    elif status == "mild_deviation":
+        review_priority = "non_urgent_clinical_review"
+        draft_advice = (
+            f"The {action_text} curve shows mild deviation from the healthy reference. "
+            "A clinician or physiotherapist may review pain, swelling, range of motion, strength, and movement technique before increasing activity intensity."
+        )
+    elif status == "significant_deviation":
+        review_priority = "clinical_review_recommended"
+        draft_advice = (
+            f"The {action_text} curve shows significant deviation from the healthy reference. "
+            "A clinician or physiotherapist should review the movement before progression, especially if the patient reports pain, instability, swelling, or reduced function."
+        )
+    else:
+        review_priority = "data_quality_review"
+        draft_advice = (
+            "The movement analysis is unclear. A clinician should review the raw motion data and repeat the measurement if needed before using this output."
+        )
+
+    return {
+        "reviewPriority": review_priority,
+        "focusAreas": focus_areas,
+        "draftAdvice": draft_advice,
+        "safetyNote": (
+            "This is a draft clinical-support message for qualified review. "
+            "It is not a diagnosis, prescription, or standalone treatment plan."
+        ),
+        "rangeOfMotionPercentOfStandard": metrics.get("rangeOfMotionPercentOfStandard"),
+    }
+
+
 def build_threshold_summary():
     return {
         "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
@@ -970,6 +1023,7 @@ def build_output_json(
     segmentation=None,
     quality_notes=None,
 ):
+    component_status = build_component_status(metrics)
     return {
         "action": action,
         "angleID": angle_id,
@@ -981,12 +1035,13 @@ def build_output_json(
         "segmentation": segmentation,
         "status": status,
         "confidence": confidence,
-        "componentStatus": build_component_status(metrics),
+        "componentStatus": component_status,
         "engineeringThresholds": build_threshold_summary(),
         "metrics": metrics,
         "qualityNotes": quality_notes or [],
         "observations": observations,
         "recommendationText": generate_recommendation_text(action, status, metrics, observations),
+        "clinicalAdviceDraft": generate_clinical_advice_draft(action, status, component_status, metrics),
         "doctorReviewNote": DOCTOR_REVIEW_NOTE,
         "limitations": LIMITATIONS,
     }
@@ -1097,6 +1152,12 @@ def write_txt(path, data):
             "",
             "Recommendation:",
             data["recommendationText"],
+            "",
+            "Clinical advice draft:",
+            data.get("clinicalAdviceDraft", {}).get("draftAdvice", ""),
+            f"Review priority: {data.get('clinicalAdviceDraft', {}).get('reviewPriority', '')}",
+            f"Focus areas: {', '.join(data.get('clinicalAdviceDraft', {}).get('focusAreas', []))}",
+            f"Safety note: {data.get('clinicalAdviceDraft', {}).get('safetyNote', '')}",
             "",
             "Doctor review note:",
             data["doctorReviewNote"],
