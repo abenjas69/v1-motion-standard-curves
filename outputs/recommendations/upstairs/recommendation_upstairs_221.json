@@ -1,0 +1,82 @@
+{
+  "action": "upstairs",
+  "angleID": "left_knee",
+  "comparisonVersion": "v0.5-robust-component-metrics",
+  "inputType": "api",
+  "patientSource": "http://113.44.220.94:3000/measurements/221",
+  "standardSource": "output_upstairs_python/standard_upstairs_curve.csv",
+  "comparisonMode": "full_curve",
+  "segmentation": {
+    "requestedMode": "auto",
+    "attempted": false,
+    "used": false,
+    "method": "whole_action",
+    "label": "full_action",
+    "segmentsDetected": 0,
+    "segmentsUsed": 0,
+    "segmentsRejected": 0,
+    "rejectedReasonCounts": {},
+    "averageSegmentDurationSeconds": null,
+    "segmentDurationSeconds": [],
+    "fallbackReason": "The current upstairs standard curve represents the full stair-climbing action, not one step cycle."
+  },
+  "status": "significant_deviation",
+  "confidence": "high",
+  "componentStatus": {
+    "overall": "significant_deviation",
+    "shape": "significant_deviation",
+    "rangeOfMotion": "mild_deviation",
+    "verticalOffset": "mild_deviation",
+    "standardBand": "significant_deviation"
+  },
+  "engineeringThresholds": {
+    "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+    "normalRmseMax": 8.0,
+    "mildRmseMax": 18.0,
+    "normalAmplitudeDifferenceMax": 10.0,
+    "mildAmplitudeDifferenceMax": 25.0,
+    "normalOutsideStandardBandMax": 20.0,
+    "mildOutsideStandardBandMax": 50.0
+  },
+  "metrics": {
+    "patientPeakAngle": 50.435073,
+    "standardPeakAngle": 75.181932,
+    "peakAngleDifference": -24.746859,
+    "patientPeakPercent": 69.0,
+    "standardPeakPercent": 23.0,
+    "peakTimingDifferencePercent": 46.0,
+    "patientMinAngle": 4.939463,
+    "standardMinAngle": 10.814784,
+    "minAngleDifference": -5.875321,
+    "patientAmplitude": 45.49561,
+    "standardAmplitude": 64.367148,
+    "amplitudeDifference": -18.871538,
+    "amplitudeRatio": 0.706814,
+    "rangeOfMotionPercentOfStandard": 70.681413,
+    "mae": 21.102545,
+    "rmse": 25.72453,
+    "shapeRmseAfterOffsetCorrection": 19.799341,
+    "maxAbsoluteDeviation": 57.207024,
+    "meanSignedDeviation": -16.423687,
+    "correlation": 0.276506,
+    "outsideStandardBandPercent": 51.485149
+  },
+  "qualityNotes": [
+    "The comparison used the full patient curve because segmentation was not available or not appropriate for this action.",
+    "Upstairs is currently compared as a full stair-climbing action because the current standard curve is full-action based."
+  ],
+  "observations": [
+    "Lower peak knee angle may suggest reduced knee lift during stair climbing.",
+    "Lower movement amplitude may suggest limited movement range.",
+    "The stair-climbing curve differs from the standard curve shape.",
+    "A notable portion of the curve is outside the healthy standard deviation band.",
+    "The patient curve is generally below the standard curve."
+  ],
+  "recommendationText": "The stair-climbing curve shows significant deviation from the current healthy reference. Lower peak knee angle may suggest reduced knee lift during stair climbing. Lower movement amplitude may suggest limited movement range. The stair-climbing curve differs from the standard curve shape. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.",
+  "doctorReviewNote": "This is AI-assisted analysis and should be reviewed by a doctor.",
+  "limitations": [
+    "This output is not a medical diagnosis.",
+    "The analysis is based only on motion curve data.",
+    "The result should be interpreted by a qualified clinician."
+  ]
+}

@@ -1,0 +1,4 @@
+used_segment_index,detected_segment_index,source,start_time_seconds,end_time_seconds,duration_seconds,point_count,amplitude_degrees,peak_angle,status,rmse,mae,peak_angle_difference,amplitude_difference,outside_standard_band_percent
+1,1,peak_centered,1.786,8.342,6.556,66,87.18,89.21,mild_deviation,8.713347,7.205213,-13.836106,-8.783107,11.881188
+2,2,peak_centered,8.342,14.513,6.171,62,92.38,96.65,mild_deviation,9.866016,6.982985,-6.884095,-4.027574,18.811881
+3,3,peak_centered,14.513,20.929,6.416,65,85.42,89.69,mild_deviation,10.385918,8.544124,-13.696284,-10.507673,13.861386

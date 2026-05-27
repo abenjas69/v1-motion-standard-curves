@@ -1,0 +1,216 @@
+{
+  "action": "walking",
+  "angleID": "left_knee",
+  "comparisonVersion": "v0.5-robust-component-metrics",
+  "inputType": "api",
+  "patientSource": "http://113.44.220.94:3000/measurements/212",
+  "standardSource": "output_python/normal_knee_curve.csv",
+  "comparisonMode": "segmented",
+  "segmentation": {
+    "requestedMode": "auto",
+    "attempted": true,
+    "used": true,
+    "method": "local_minima_cycles",
+    "label": "cycles",
+    "segmentsDetected": 9,
+    "segmentsUsed": 5,
+    "segmentsRejected": 4,
+    "rejectedReasonCounts": {
+      "duration_too_short": 1,
+      "amplitude_too_low": 1,
+      "edge_segment_trimmed": 2
+    },
+    "averageSegmentDurationSeconds": 1.4008,
+    "segmentDurationSeconds": [
+      1.184,
+      1.202,
+      1.769,
+      1.185,
+      1.664
+    ],
+    "fallbackReason": null,
+    "extremaCount": 10,
+    "segments": [
+      {
+        "index": 2,
+        "source": "local_minima",
+        "durationSeconds": 1.1839999999999997,
+        "amplitudeDegrees": 36.22,
+        "peakAngle": 36.69,
+        "startTimeSeconds": 2.701,
+        "endTimeSeconds": 3.885,
+        "pointCount": 13,
+        "usedSegmentIndex": 1
+      },
+      {
+        "index": 3,
+        "source": "local_minima",
+        "durationSeconds": 1.202,
+        "amplitudeDegrees": 25.77,
+        "peakAngle": 27.2,
+        "startTimeSeconds": 3.885,
+        "endTimeSeconds": 5.087,
+        "pointCount": 12,
+        "usedSegmentIndex": 2
+      },
+      {
+        "index": 4,
+        "source": "local_minima",
+        "durationSeconds": 1.7690000000000001,
+        "amplitudeDegrees": 35.529999999999994,
+        "peakAngle": 37.12,
+        "startTimeSeconds": 5.087,
+        "endTimeSeconds": 6.856,
+        "pointCount": 18,
+        "usedSegmentIndex": 3
+      },
+      {
+        "index": 5,
+        "source": "local_minima",
+        "durationSeconds": 1.1850000000000005,
+        "amplitudeDegrees": 32.9,
+        "peakAngle": 35.17,
+        "startTimeSeconds": 6.856,
+        "endTimeSeconds": 8.041,
+        "pointCount": 13,
+        "usedSegmentIndex": 4
+      },
+      {
+        "index": 7,
+        "source": "local_minima",
+        "durationSeconds": 1.6639999999999997,
+        "amplitudeDegrees": 36.33,
+        "peakAngle": 36.98,
+        "startTimeSeconds": 8.461,
+        "endTimeSeconds": 10.125,
+        "pointCount": 18,
+        "usedSegmentIndex": 5
+      }
+    ],
+    "aggregationMethod": "pointwise_median",
+    "segmentMetricSummary": {
+      "segmentRmseMean": 16.95847,
+      "segmentRmseStd": 3.186045,
+      "segmentAmplitudeDifferenceMean": -21.140984,
+      "segmentPeakAngleDifferenceMean": -27.333788,
+      "segmentOutsideStandardBandPercentMean": 76.039604
+    },
+    "segmentMetrics": [
+      {
+        "index": 1,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 12.647475,
+          "mae": 10.223956,
+          "peakAngleDifference": -25.021897,
+          "amplitudeDifference": -18.16915,
+          "outsideStandardBandPercent": 74.257426
+        }
+      },
+      {
+        "index": 2,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 19.848797,
+          "mae": 15.008988,
+          "peakAngleDifference": -34.645632,
+          "amplitudeDifference": -28.550374,
+          "outsideStandardBandPercent": 80.19802
+        }
+      },
+      {
+        "index": 3,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 15.223877,
+          "mae": 11.822171,
+          "peakAngleDifference": -25.227123,
+          "amplitudeDifference": -19.273675,
+          "outsideStandardBandPercent": 70.29703
+        }
+      },
+      {
+        "index": 4,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 16.851139,
+          "mae": 12.53546,
+          "peakAngleDifference": -26.842072,
+          "amplitudeDifference": -21.595181,
+          "outsideStandardBandPercent": 68.316832
+        }
+      },
+      {
+        "index": 5,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 20.221064,
+          "mae": 14.557685,
+          "peakAngleDifference": -24.932216,
+          "amplitudeDifference": -18.116538,
+          "outsideStandardBandPercent": 87.128713
+        }
+      }
+    ]
+  },
+  "status": "significant_deviation",
+  "confidence": "medium",
+  "componentStatus": {
+    "overall": "significant_deviation",
+    "shape": "mild_deviation",
+    "rangeOfMotion": "mild_deviation",
+    "verticalOffset": "mild_deviation",
+    "standardBand": "significant_deviation"
+  },
+  "engineeringThresholds": {
+    "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+    "normalRmseMax": 8.0,
+    "mildRmseMax": 18.0,
+    "normalAmplitudeDifferenceMax": 10.0,
+    "mildAmplitudeDifferenceMax": 25.0,
+    "normalOutsideStandardBandMax": 20.0,
+    "mildOutsideStandardBandMax": 50.0
+  },
+  "metrics": {
+    "patientPeakAngle": 34.099578,
+    "standardPeakAngle": 61.363057,
+    "peakAngleDifference": -27.263479,
+    "patientPeakPercent": 58.0,
+    "standardPeakPercent": 54.0,
+    "peakTimingDifferencePercent": 4.0,
+    "patientMinAngle": 2.061883,
+    "standardMinAngle": 7.586953,
+    "minAngleDifference": -5.52507,
+    "patientAmplitude": 32.037695,
+    "standardAmplitude": 53.776104,
+    "amplitudeDifference": -21.738409,
+    "amplitudeRatio": 0.595761,
+    "rangeOfMotionPercentOfStandard": 59.57608,
+    "mae": 11.858223,
+    "rmse": 15.572104,
+    "shapeRmseAfterOffsetCorrection": 10.093215,
+    "maxAbsoluteDeviation": 33.900428,
+    "meanSignedDeviation": -11.858223,
+    "correlation": 0.966936,
+    "outsideStandardBandPercent": 74.257426
+  },
+  "qualityNotes": [
+    "Many detected segments were rejected by engineering filters. Inspect the raw patient signal and segmentation settings."
+  ],
+  "observations": [
+    "The comparison used 5 detected cycles from the patient curve.",
+    "Lower peak knee angle may indicate reduced knee flexion during walking.",
+    "Lower movement amplitude may suggest reduced walking range of motion.",
+    "The walking curve differs from the standard curve shape.",
+    "The curve shape is relatively consistent with the standard, but the range of motion is lower.",
+    "A notable portion of the curve is outside the healthy standard deviation band.",
+    "The patient curve is generally below the standard curve."
+  ],
+  "recommendationText": "The walking curve shows significant deviation from the current healthy reference. The comparison used 5 detected cycles from the patient curve. Lower peak knee angle may indicate reduced knee flexion during walking. Lower movement amplitude may suggest reduced walking range of motion. The walking curve differs from the standard curve shape. The curve shape is relatively consistent with the standard, but the range of motion is lower. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.",
+  "doctorReviewNote": "This is AI-assisted analysis and should be reviewed by a doctor.",
+  "limitations": [
+    "This output is not a medical diagnosis.",
+    "The analysis is based only on motion curve data.",
+    "The result should be interpreted by a qualified clinician."
+  ]
+}

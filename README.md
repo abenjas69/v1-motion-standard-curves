@@ -3,13 +3,13 @@
 Team V1 - AI & Motion Recognition  
 Phase II rehabilitation standard-curve prototype
 
-This repository contains the current Python scripts and generated outputs for building healthy standard motion curves for:
+This repository contains the current Python scripts and generated outputs for building healthy standard motion curves and comparing patient sessions against those saved standards.
 
 - Walking
 - Squat
 - Upstairs / stair climbing
 
-The current Phase II goal is practical: build healthy standard curves first, then compare patient curves against those standards later. This repository does not provide medical diagnosis or final AI recommendations.
+The current Phase II goal is practical: build healthy standard curves first, then generate AI-assisted rule-based comparison outputs for patient sessions. This repository does not provide medical diagnosis.
 
 ## Repository Structure
 
@@ -24,6 +24,9 @@ outputs/
   squat/
   upstairs/
   recommendations/
+    walking/
+    upstairs/
+    squat/
 
 docs/
   Phase II analysis and implementation notes
@@ -75,15 +78,19 @@ python scripts/Squat.py --out-dir outputs/squat
 python scripts/Upstairs.py --out-dir outputs/upstairs
 ```
 
-Generate an AI-assisted rule-based recommendation from curve data:
+Generate an AI-assisted rule-based recommendation from AuCloud API data:
 
 ```bash
 python generate_recommendation_from_curves.py \
   --action walking \
-  --patient-session-id 33 \
+  --patient-session-id 209 \
   --standard-csv outputs/walking/normal_knee_curve.csv \
-  --out-json outputs/recommendations/recommendation_walking_session33.json \
-  --out-txt outputs/recommendations/recommendation_walking_session33.txt
+  --out-json outputs/recommendations/walking/recommendation_walking_209.json \
+  --out-txt outputs/recommendations/walking/recommendation_walking_209.txt \
+  --out-html outputs/recommendations/walking/recommendation_walking_209.html \
+  --out-average-csv outputs/recommendations/walking/recommendation_walking_209_average.csv \
+  --out-segments-csv outputs/recommendations/walking/recommendation_walking_209_segments.csv \
+  --out-metrics-csv outputs/recommendations/walking/recommendation_walking_209_metrics.csv
 ```
 
 The scripts use:
@@ -96,7 +103,7 @@ as the default API endpoint.
 
 ## Outputs To Review First
 
-Open these files in a browser:
+Open these standard-curve validation files in a browser:
 
 ```text
 outputs/walking/raw_vs_standard_cycles.html
@@ -106,11 +113,21 @@ outputs/upstairs/raw_vs_standard_sessions.html
 
 These are the best visual validation files because they overlay the raw curves with the fitted standard curve.
 
+For patient recommendation examples, open:
+
+```text
+outputs/recommendations/walking/recommendation_walking_209.html
+outputs/recommendations/upstairs/recommendation_upstairs_219.html
+outputs/recommendations/squat/recommendation_squat_228.html
+```
+
 ## Notes
 
 - `Walk.py` is kept as the walking-only reference.
 - `Squat.py` is separate and uses squat-specific repetition terminology.
 - `Upstairs.py` is separate and uses full-action normalization.
-- `generate_recommendation_from_curves.py` compares patient curves against saved standard curves and outputs preliminary JSON/TXT advice.
+- `generate_recommendation_from_curves.py` compares patient curves against saved standard curves and outputs preliminary JSON/TXT/HTML/CSV advice.
+- Current recommendation algorithm version: `v0.5-robust-component-metrics`.
+- JSON output includes `status`, `confidence`, `componentStatus`, `metrics`, `segmentation`, `observations`, and `recommendationText`.
 - Recommendation thresholds are preliminary engineering values and are not clinically validated.
 - The recommendation output is AI-assisted support only, not a medical diagnosis.

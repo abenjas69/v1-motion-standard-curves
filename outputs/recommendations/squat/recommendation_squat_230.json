@@ -1,0 +1,168 @@
+{
+  "action": "squat",
+  "angleID": "left_knee",
+  "comparisonVersion": "v0.5-robust-component-metrics",
+  "inputType": "api",
+  "patientSource": "http://113.44.220.94:3000/measurements/230",
+  "standardSource": "output_squat_python_new_data/standard_squat_curve.csv",
+  "comparisonMode": "segmented",
+  "segmentation": {
+    "requestedMode": "auto",
+    "attempted": true,
+    "used": true,
+    "method": "peak_centered_repetitions",
+    "label": "repetitions",
+    "segmentsDetected": 4,
+    "segmentsUsed": 3,
+    "segmentsRejected": 1,
+    "rejectedReasonCounts": {
+      "duration_too_short": 1
+    },
+    "averageSegmentDurationSeconds": 3.520333,
+    "segmentDurationSeconds": [
+      3.03,
+      3.3,
+      4.231
+    ],
+    "fallbackReason": null,
+    "extremaCount": 4,
+    "segments": [
+      {
+        "index": 1,
+        "source": "peak_centered",
+        "durationSeconds": 3.03,
+        "amplitudeDegrees": 33.8,
+        "peakAngle": 38.98,
+        "startTimeSeconds": 0.645,
+        "endTimeSeconds": 3.675,
+        "pointCount": 31,
+        "usedSegmentIndex": 1
+      },
+      {
+        "index": 2,
+        "source": "peak_centered",
+        "durationSeconds": 3.3,
+        "amplitudeDegrees": 44.85,
+        "peakAngle": 45.78,
+        "startTimeSeconds": 3.675,
+        "endTimeSeconds": 6.975,
+        "pointCount": 34,
+        "usedSegmentIndex": 2
+      },
+      {
+        "index": 3,
+        "source": "peak_centered",
+        "durationSeconds": 4.231,
+        "amplitudeDegrees": 44.19,
+        "peakAngle": 45.12,
+        "startTimeSeconds": 6.975,
+        "endTimeSeconds": 11.206,
+        "pointCount": 43,
+        "usedSegmentIndex": 3
+      }
+    ],
+    "aggregationMethod": "pointwise_median",
+    "segmentMetricSummary": {
+      "segmentRmseMean": 37.809309,
+      "segmentRmseStd": 2.543357,
+      "segmentAmplitudeDifferenceMean": -54.285103,
+      "segmentPeakAngleDifferenceMean": -59.69324,
+      "segmentOutsideStandardBandPercentMean": 62.376238
+    },
+    "segmentMetrics": [
+      {
+        "index": 1,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 40.039185,
+          "mae": 30.941309,
+          "peakAngleDifference": -63.926075,
+          "amplitudeDifference": -61.157585,
+          "outsideStandardBandPercent": 56.435644
+        }
+      },
+      {
+        "index": 2,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 35.039257,
+          "mae": 27.105114,
+          "peakAngleDifference": -57.119775,
+          "amplitudeDifference": -50.570251,
+          "outsideStandardBandPercent": 54.455446
+        }
+      },
+      {
+        "index": 3,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 38.349486,
+          "mae": 32.52294,
+          "peakAngleDifference": -58.033871,
+          "amplitudeDifference": -51.127472,
+          "outsideStandardBandPercent": 76.237624
+        }
+      }
+    ]
+  },
+  "status": "significant_deviation",
+  "confidence": "medium",
+  "componentStatus": {
+    "overall": "significant_deviation",
+    "shape": "significant_deviation",
+    "rangeOfMotion": "significant_deviation",
+    "verticalOffset": "significant_deviation",
+    "standardBand": "significant_deviation"
+  },
+  "engineeringThresholds": {
+    "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+    "normalRmseMax": 8.0,
+    "mildRmseMax": 18.0,
+    "normalAmplitudeDifferenceMax": 10.0,
+    "mildAmplitudeDifferenceMax": 25.0,
+    "normalOutsideStandardBandMax": 20.0,
+    "mildOutsideStandardBandMax": 50.0
+  },
+  "metrics": {
+    "patientPeakAngle": 44.835925,
+    "standardPeakAngle": 102.884455,
+    "peakAngleDifference": -58.04853,
+    "patientPeakPercent": 66.0,
+    "standardPeakPercent": 51.0,
+    "peakTimingDifferencePercent": 15.0,
+    "patientMinAngle": 5.068031,
+    "standardMinAngle": 7.985524,
+    "minAngleDifference": -2.917493,
+    "patientAmplitude": 39.767894,
+    "standardAmplitude": 94.898931,
+    "amplitudeDifference": -55.131037,
+    "amplitudeRatio": 0.419055,
+    "rangeOfMotionPercentOfStandard": 41.905524,
+    "mae": 28.590194,
+    "rmse": 36.487934,
+    "shapeRmseAfterOffsetCorrection": 23.106989,
+    "maxAbsoluteDeviation": 62.649725,
+    "meanSignedDeviation": -28.238916,
+    "correlation": 0.903803,
+    "outsideStandardBandPercent": 56.435644
+  },
+  "qualityNotes": [
+    "Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition.",
+    "Large peak-angle difference detected. Review the raw curve visually before interpreting this as a movement finding."
+  ],
+  "observations": [
+    "The comparison used 3 detected repetitions from the patient curve.",
+    "Lower peak knee angle may suggest reduced squat depth or reduced knee flexion.",
+    "Lower movement amplitude may suggest incomplete squat movement.",
+    "The squat pattern differs from the healthy standard curve.",
+    "A notable portion of the curve is outside the healthy standard deviation band.",
+    "The patient curve is generally below the standard curve."
+  ],
+  "recommendationText": "The squat curve shows significant deviation from the current healthy reference. The comparison used 3 detected repetitions from the patient curve. Lower peak knee angle may suggest reduced squat depth or reduced knee flexion. Lower movement amplitude may suggest incomplete squat movement. The squat pattern differs from the healthy standard curve. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.",
+  "doctorReviewNote": "This is AI-assisted analysis and should be reviewed by a doctor.",
+  "limitations": [
+    "This output is not a medical diagnosis.",
+    "The analysis is based only on motion curve data.",
+    "The result should be interpreted by a qualified clinician."
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "action": "squat",
+  "angleID": "left_knee",
+  "comparisonVersion": "v0.5-robust-component-metrics",
+  "inputType": "api",
+  "patientSource": "http://113.44.220.94:3000/measurements/228",
+  "standardSource": "output_squat_python_new_data/standard_squat_curve.csv",
+  "comparisonMode": "segmented",
+  "segmentation": {
+    "requestedMode": "auto",
+    "attempted": true,
+    "used": true,
+    "method": "peak_centered_repetitions",
+    "label": "repetitions",
+    "segmentsDetected": 5,
+    "segmentsUsed": 4,
+    "segmentsRejected": 1,
+    "rejectedReasonCounts": {
+      "amplitude_too_low": 1
+    },
+    "averageSegmentDurationSeconds": 3.52175,
+    "segmentDurationSeconds": [
+      2.505,
+      3.855,
+      3.826,
+      3.901
+    ],
+    "fallbackReason": null,
+    "extremaCount": 5,
+    "segments": [
+      {
+        "index": 2,
+        "source": "peak_centered",
+        "durationSeconds": 2.505,
+        "amplitudeDegrees": 38.4,
+        "peakAngle": 39.22,
+        "startTimeSeconds": 1.425,
+        "endTimeSeconds": 3.93,
+        "pointCount": 26,
+        "usedSegmentIndex": 1
+      },
+      {
+        "index": 3,
+        "source": "peak_centered",
+        "durationSeconds": 3.855,
+        "amplitudeDegrees": 56.49,
+        "peakAngle": 57.07,
+        "startTimeSeconds": 3.93,
+        "endTimeSeconds": 7.785,
+        "pointCount": 39,
+        "usedSegmentIndex": 2
+      },
+      {
+        "index": 4,
+        "source": "peak_centered",
+        "durationSeconds": 3.8260000000000005,
+        "amplitudeDegrees": 49.78,
+        "peakAngle": 50.22,
+        "startTimeSeconds": 7.785,
+        "endTimeSeconds": 11.611,
+        "pointCount": 39,
+        "usedSegmentIndex": 3
+      },
+      {
+        "index": 5,
+        "source": "peak_centered",
+        "durationSeconds": 3.901,
+        "amplitudeDegrees": 57.58,
+        "peakAngle": 57.9,
+        "startTimeSeconds": 11.611,
+        "endTimeSeconds": 15.512,
+        "pointCount": 40,
+        "usedSegmentIndex": 4
+      }
+    ],
+    "aggregationMethod": "pointwise_median",
+    "segmentMetricSummary": {
+      "segmentRmseMean": 33.592926,
+      "segmentRmseStd": 4.989008,
+      "segmentAmplitudeDifferenceMean": -44.847316,
+      "segmentPeakAngleDifferenceMean": -51.986318,
+      "segmentOutsideStandardBandPercentMean": 61.881189
+    },
+    "segmentMetrics": [
+      {
+        "index": 1,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 40.971221,
+          "mae": 34.466145,
+          "peakAngleDifference": -63.86908,
+          "amplitudeDifference": -56.759919,
+          "outsideStandardBandPercent": 72.277228
+        }
+      },
+      {
+        "index": 2,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 30.170561,
+          "mae": 25.630817,
+          "peakAngleDifference": -45.998116,
+          "amplitudeDifference": -38.701913,
+          "outsideStandardBandPercent": 63.366337
+        }
+      },
+      {
+        "index": 3,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 32.204068,
+          "mae": 25.510603,
+          "peakAngleDifference": -52.986557,
+          "amplitudeDifference": -46.068743,
+          "outsideStandardBandPercent": 50.49505
+        }
+      },
+      {
+        "index": 4,
+        "status": "significant_deviation",
+        "metrics": {
+          "rmse": 31.025853,
+          "mae": 24.970834,
+          "peakAngleDifference": -45.091521,
+          "amplitudeDifference": -37.858689,
+          "outsideStandardBandPercent": 61.386139
+        }
+      }
+    ]
+  },
+  "status": "significant_deviation",
+  "confidence": "medium",
+  "componentStatus": {
+    "overall": "significant_deviation",
+    "shape": "significant_deviation",
+    "rangeOfMotion": "significant_deviation",
+    "verticalOffset": "significant_deviation",
+    "standardBand": "significant_deviation"
+  },
+  "engineeringThresholds": {
+    "validationStatus": "preliminary_engineering_thresholds_not_clinically_validated",
+    "normalRmseMax": 8.0,
+    "mildRmseMax": 18.0,
+    "normalAmplitudeDifferenceMax": 10.0,
+    "mildAmplitudeDifferenceMax": 25.0,
+    "normalOutsideStandardBandMax": 20.0,
+    "mildOutsideStandardBandMax": 50.0
+  },
+  "metrics": {
+    "patientPeakAngle": 53.378588,
+    "standardPeakAngle": 102.884455,
+    "peakAngleDifference": -49.505867,
+    "patientPeakPercent": 58.0,
+    "standardPeakPercent": 51.0,
+    "peakTimingDifferencePercent": 7.0,
+    "patientMinAngle": 1.075397,
+    "standardMinAngle": 7.985524,
+    "minAngleDifference": -6.910127,
+    "patientAmplitude": 52.30319,
+    "standardAmplitude": 94.898931,
+    "amplitudeDifference": -42.595741,
+    "amplitudeRatio": 0.551146,
+    "rangeOfMotionPercentOfStandard": 55.114625,
+    "mae": 26.060243,
+    "rmse": 32.085536,
+    "shapeRmseAfterOffsetCorrection": 18.717514,
+    "maxAbsoluteDeviation": 53.927072,
+    "meanSignedDeviation": -26.060243,
+    "correlation": 0.958057,
+    "outsideStandardBandPercent": 53.465347
+  },
+  "qualityNotes": [
+    "Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition.",
+    "Large peak-angle difference detected. Review the raw curve visually before interpreting this as a movement finding."
+  ],
+  "observations": [
+    "The comparison used 4 detected repetitions from the patient curve.",
+    "Lower peak knee angle may suggest reduced squat depth or reduced knee flexion.",
+    "Lower movement amplitude may suggest incomplete squat movement.",
+    "The squat pattern differs from the healthy standard curve.",
+    "A notable portion of the curve is outside the healthy standard deviation band.",
+    "The patient curve is generally below the standard curve."
+  ],
+  "recommendationText": "The squat curve shows significant deviation from the current healthy reference. The comparison used 4 detected repetitions from the patient curve. Lower peak knee angle may suggest reduced squat depth or reduced knee flexion. Lower movement amplitude may suggest incomplete squat movement. The squat pattern differs from the healthy standard curve. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.",
+  "doctorReviewNote": "This is AI-assisted analysis and should be reviewed by a doctor.",
+  "limitations": [
+    "This output is not a medical diagnosis.",
+    "The analysis is based only on motion curve data.",
+    "The result should be interpreted by a qualified clinician."
+  ]
+}

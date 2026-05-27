@@ -54,6 +54,14 @@ def synthetic_walking_curve(repetitions=6):
     ]
 
 
+def synthetic_low_peak_walking_curve(repetitions=6):
+    values = [20.0, 0.0, -10.0, 0.0, 20.0] * repetitions
+    return [
+        {"time_seconds": index * 0.2, "angle": angle, "percent": None}
+        for index, angle in enumerate(values)
+    ]
+
+
 class RecommendationModuleTests(unittest.TestCase):
     def test_full_curve_comparison_outputs_version_and_confidence(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -92,6 +100,7 @@ class RecommendationModuleTests(unittest.TestCase):
             self.assertEqual(confidence, "high")
             self.assertEqual(output["comparisonVersion"], rec.COMPARISON_VERSION)
             self.assertEqual(output["confidence"], "high")
+            self.assertEqual(output["componentStatus"]["overall"], "normal")
             self.assertEqual(output["comparisonMode"], "full_curve")
             self.assertEqual(len(patient_rows), len(standard_rows))
             self.assertEqual(aligned_segments, [])
@@ -123,6 +132,47 @@ class RecommendationModuleTests(unittest.TestCase):
         self.assertEqual(len(aligned_segments), segmentation["segmentsUsed"])
         self.assertEqual(len(patient_rows), len(standard_rows))
         self.assertLess(metrics["rmse"], rec.NORMAL_RMSE_MAX)
+
+    def test_walking_segmentation_keeps_low_peak_patient_cycles(self):
+        standard_rows = [
+            {
+                "percent": percent,
+                "standard_angle": angle,
+                "mean_angle": angle,
+                "sd_angle": 5.0,
+                "lower": angle - 5.0,
+                "upper": angle + 5.0,
+            }
+            for percent, angle in STANDARD_POINTS
+        ]
+
+        _patient_rows, _metrics, segmentation, aligned_segments = rec.compare_patient_to_standard(
+            synthetic_low_peak_walking_curve(),
+            standard_rows,
+            "walking",
+            "auto",
+            smooth_window=1,
+        )
+
+        self.assertTrue(segmentation["used"])
+        self.assertGreaterEqual(segmentation["segmentsUsed"], 3)
+        self.assertNotIn("peak_angle_too_low", segmentation["rejectedReasonCounts"])
+        self.assertEqual(len(aligned_segments), segmentation["segmentsUsed"])
+
+    def test_segment_aggregation_uses_pointwise_median(self):
+        standard_rows = [
+            {"percent": percent, "standard_angle": angle}
+            for percent, angle in STANDARD_POINTS
+        ]
+        aligned_segments = [
+            [{"percent": percent, "angle": angle} for percent, angle in STANDARD_POINTS],
+            [{"percent": percent, "angle": angle} for percent, angle in STANDARD_POINTS],
+            [{"percent": percent, "angle": angle + 40.0} for percent, angle in STANDARD_POINTS],
+        ]
+
+        patient_rows = rec.median_aligned_segments(aligned_segments, standard_rows)
+
+        self.assertEqual([row["angle"] for row in patient_rows], [angle for _percent, angle in STANDARD_POINTS])
 
     def test_cli_writes_optional_outputs(self):
         with tempfile.TemporaryDirectory() as tmp:

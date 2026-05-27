@@ -32,6 +32,17 @@ For walking and squat, the script can also segment a complete patient session be
 
 This gives fairer results for complete API sessions because each detected cycle/repetition is normalized to 0-100% before being compared with the standard curve.
 
+Current segmentation does not reject walking or squat segments solely because the absolute peak knee angle is low. Low flexion can be a patient finding, so duration, amplitude, and point count are used to filter obvious invalid segments.
+
+When several walking cycles or squat repetitions are detected, the patient reference curve is aggregated with a pointwise median rather than a simple mean. This makes the comparison less sensitive to one noisy or incomplete segment.
+
+The JSON also separates the global result from component-level engineering status:
+
+- `shape`: curve shape after vertical offset correction;
+- `rangeOfMotion`: movement amplitude compared with the standard;
+- `verticalOffset`: whether the whole patient curve is shifted above or below the standard;
+- `standardBand`: percentage of points outside the healthy standard-deviation band.
+
 ## 2. Why Raw/Processed Data Input Is Used
 
 Lee from the web team confirmed that image input is not needed for the first version. Raw or processed curve data is preferred because it is easier to compare numerically, easier to send through the backend, and avoids image parsing errors.
@@ -87,13 +98,13 @@ Walking:
 python generate_recommendation_from_curves.py \
   --action walking \
   --patient-csv path/to/patient_curve.csv \
-  --standard-csv output_python/normal_knee_curve.csv \
-  --out-json output/recommendation_walking.json \
-  --out-txt output/recommendation_walking.txt \
-  --out-html output/recommendation_walking.html \
-  --out-average-csv output/recommendation_walking_average.csv \
-  --out-segments-csv output/recommendation_walking_segments.csv \
-  --out-metrics-csv output/recommendation_walking_metrics.csv
+  --standard-csv outputs/walking/normal_knee_curve.csv \
+  --out-json outputs/recommendations/walking/recommendation_walking.json \
+  --out-txt outputs/recommendations/walking/recommendation_walking.txt \
+  --out-html outputs/recommendations/walking/recommendation_walking.html \
+  --out-average-csv outputs/recommendations/walking/recommendation_walking_average.csv \
+  --out-segments-csv outputs/recommendations/walking/recommendation_walking_segments.csv \
+  --out-metrics-csv outputs/recommendations/walking/recommendation_walking_metrics.csv
 ```
 
 Squat:
@@ -102,9 +113,9 @@ Squat:
 python generate_recommendation_from_curves.py \
   --action squat \
   --patient-csv path/to/patient_curve.csv \
-  --standard-csv output_squat_python_new_data/standard_squat_curve.csv \
-  --out-json output/recommendation_squat.json \
-  --out-txt output/recommendation_squat.txt
+  --standard-csv outputs/squat/standard_squat_curve.csv \
+  --out-json outputs/recommendations/squat/recommendation_squat.json \
+  --out-txt outputs/recommendations/squat/recommendation_squat.txt
 ```
 
 Upstairs:
@@ -113,9 +124,9 @@ Upstairs:
 python generate_recommendation_from_curves.py \
   --action upstairs \
   --patient-csv path/to/patient_curve.csv \
-  --standard-csv output_upstairs_python/standard_upstairs_curve.csv \
-  --out-json output/recommendation_upstairs.json \
-  --out-txt output/recommendation_upstairs.txt
+  --standard-csv outputs/upstairs/standard_upstairs_curve.csv \
+  --out-json outputs/recommendations/upstairs/recommendation_upstairs.json \
+  --out-txt outputs/recommendations/upstairs/recommendation_upstairs.txt
 ```
 
 API input example:
@@ -124,9 +135,38 @@ API input example:
 python generate_recommendation_from_curves.py \
   --action walking \
   --patient-session-id 33 \
-  --standard-csv output_python/normal_knee_curve.csv \
-  --out-json output/recommendation_walking.json \
-  --out-txt output/recommendation_walking.txt
+  --standard-csv outputs/walking/normal_knee_curve.csv \
+  --out-json outputs/recommendations/walking/recommendation_walking.json \
+  --out-txt outputs/recommendations/walking/recommendation_walking.txt
+```
+
+S1 / AuCloud patient API examples:
+
+```bash
+python generate_recommendation_from_curves.py \
+  --action walking \
+  --patient-session-id 209 \
+  --standard-csv outputs/walking/normal_knee_curve.csv \
+  --out-json outputs/recommendations/walking/recommendation_walking_209.json \
+  --out-txt outputs/recommendations/walking/recommendation_walking_209.txt
+```
+
+```bash
+python generate_recommendation_from_curves.py \
+  --action upstairs \
+  --patient-session-id 219 \
+  --standard-csv outputs/upstairs/standard_upstairs_curve.csv \
+  --out-json outputs/recommendations/upstairs/recommendation_upstairs_219.json \
+  --out-txt outputs/recommendations/upstairs/recommendation_upstairs_219.txt
+```
+
+```bash
+python generate_recommendation_from_curves.py \
+  --action squat \
+  --patient-session-id 228 \
+  --standard-csv outputs/squat/standard_squat_curve.csv \
+  --out-json outputs/recommendations/squat/recommendation_squat_228.json \
+  --out-txt outputs/recommendations/squat/recommendation_squat_228.txt
 ```
 
 ## 5. Expected JSON Output
@@ -142,6 +182,7 @@ The JSON contains:
 - comparison mode;
 - segmentation summary;
 - status;
+- component status;
 - confidence;
 - engineering thresholds;
 - numeric metrics;
@@ -182,7 +223,7 @@ These thresholds are constants at the top of `generate_recommendation_from_curve
 
 They are not clinically validated.
 
-When segmentation is used, the main status is calculated from the average normalized patient cycle/repetition compared with the standard curve. The JSON also includes per-segment metric summaries so the web team or doctors can inspect variability between cycles/repetitions.
+When segmentation is used, the main status is calculated from the pointwise median normalized patient cycle/repetition compared with the standard curve. The JSON also includes per-segment metric summaries so the web team or doctors can inspect variability between cycles/repetitions.
 
 The HTML visualization shows:
 

@@ -1,0 +1,73 @@
+AI-Assisted Motion Curve Recommendation
+
+Action: upstairs
+Angle ID: left_knee
+Comparison version: v0.5-robust-component-metrics
+Input type: api
+Patient source: http://113.44.220.94:3000/measurements/221
+Standard source: output_upstairs_python/standard_upstairs_curve.csv
+Comparison mode: full_curve
+Status: significant_deviation
+Confidence: high
+
+Segmentation:
+- Requested mode: auto
+- Method: whole_action
+- Label: full_action
+- Attempted: False
+- Used: False
+- Segments detected: 0
+- Segments used: 0
+- Segments rejected: 0
+- Aggregation method: None
+- Average segment duration: None s
+- Fallback reason: The current upstairs standard curve represents the full stair-climbing action, not one step cycle.
+
+Component status:
+- Overall: significant_deviation
+- Shape: significant_deviation
+- Range of motion: mild_deviation
+- Vertical offset: mild_deviation
+- Standard band: significant_deviation
+
+Key metrics:
+- Patient peak angle: 50.435073 deg
+- Standard peak angle: 75.181932 deg
+- Peak angle difference: -24.746859 deg
+- Peak timing difference: 46.0 percentage points
+- Patient min angle: 4.939463 deg
+- Standard min angle: 10.814784 deg
+- Min angle difference: -5.875321 deg
+- Patient amplitude: 45.49561 deg
+- Standard amplitude: 64.367148 deg
+- Amplitude difference: -18.871538 deg
+- Range of motion percent of standard: 70.681413
+- MAE: 21.102545 deg
+- RMSE: 25.72453 deg
+- Shape RMSE after offset correction: 19.799341 deg
+- Max absolute deviation: 57.207024 deg
+- Mean signed deviation: -16.423687 deg
+- Correlation: 0.276506
+- Outside standard band percent: 51.485149
+
+Observations:
+- Lower peak knee angle may suggest reduced knee lift during stair climbing.
+- Lower movement amplitude may suggest limited movement range.
+- The stair-climbing curve differs from the standard curve shape.
+- A notable portion of the curve is outside the healthy standard deviation band.
+- The patient curve is generally below the standard curve.
+
+Quality notes:
+- The comparison used the full patient curve because segmentation was not available or not appropriate for this action.
+- Upstairs is currently compared as a full stair-climbing action because the current standard curve is full-action based.
+
+Recommendation:
+The stair-climbing curve shows significant deviation from the current healthy reference. Lower peak knee angle may suggest reduced knee lift during stair climbing. Lower movement amplitude may suggest limited movement range. The stair-climbing curve differs from the standard curve shape. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.
+
+Doctor review note:
+This is AI-assisted analysis and should be reviewed by a doctor.
+
+Limitations:
+- This output is not a medical diagnosis.
+- The analysis is based only on motion curve data.
+- The result should be interpreted by a qualified clinician.

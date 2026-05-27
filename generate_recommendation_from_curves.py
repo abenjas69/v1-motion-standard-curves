@@ -17,7 +17,7 @@ MILD_AMPLITUDE_DIFF_MAX = 25.0
 NORMAL_OUTSIDE_BAND_MAX = 20.0
 MILD_OUTSIDE_BAND_MAX = 50.0
 
-COMPARISON_VERSION = "v0.3-segmented-visual-exports"
+COMPARISON_VERSION = "v0.5-robust-component-metrics"
 
 # Preliminary engineering segmentation settings. These values are action-specific
 # starting points and should be validated visually with real patient data.
@@ -29,7 +29,7 @@ ACTION_SEGMENT_CONFIGS = {
         "min_duration_seconds": 0.6,
         "max_duration_seconds": 3.5,
         "min_amplitude_degrees": 15.0,
-        "min_peak_angle": 30.0,
+        "min_peak_angle": None,
         "min_extrema_distance_seconds": 0.35,
         "trim_edge_segments": 1,
     },
@@ -40,7 +40,7 @@ ACTION_SEGMENT_CONFIGS = {
         "min_duration_seconds": 1.0,
         "max_duration_seconds": 8.0,
         "min_amplitude_degrees": 20.0,
-        "min_peak_angle": 30.0,
+        "min_peak_angle": None,
         "min_extrema_distance_seconds": 0.8,
         "trim_edge_segments": 0,
     },
@@ -392,6 +392,7 @@ def validate_segment_record(record, config):
     duration = record["durationSeconds"]
     amplitude = record["amplitudeDegrees"]
     peak = record["peakAngle"]
+    min_peak_angle = config.get("min_peak_angle")
 
     if duration is None or duration <= 0:
         return False, "invalid_duration"
@@ -401,7 +402,7 @@ def validate_segment_record(record, config):
         return False, "duration_too_long"
     if amplitude is None or amplitude < config["min_amplitude_degrees"]:
         return False, "amplitude_too_low"
-    if peak is None or peak < config["min_peak_angle"]:
+    if min_peak_angle is not None and (peak is None or peak < min_peak_angle):
         return False, "peak_angle_too_low"
     if record["pointCount"] < 5:
         return False, "too_few_points"
@@ -593,13 +594,25 @@ def compute_metrics(patient_rows, standard_rows):
     deviations = [patient - standard for patient, standard in zip(patient_values, standard_values)]
     abs_deviations = [abs(value) for value in deviations]
     squared_deviations = [value * value for value in deviations]
+    mean_signed_deviation = safe_mean(deviations)
+    offset_corrected_deviations = [
+        (patient - mean_signed_deviation) - standard
+        for patient, standard in zip(patient_values, standard_values)
+    ]
+    offset_corrected_squared = [value * value for value in offset_corrected_deviations]
 
     patient_peak = max(patient_values)
     standard_peak = max(standard_values)
+    patient_peak_index = max(range(len(patient_values)), key=lambda index: patient_values[index])
+    standard_peak_index = max(range(len(standard_values)), key=lambda index: standard_values[index])
+    patient_peak_percent = patient_rows[patient_peak_index]["percent"]
+    standard_peak_percent = standard_rows[standard_peak_index]["percent"]
     patient_min = min(patient_values)
     standard_min = min(standard_values)
     patient_amplitude = patient_peak - patient_min
     standard_amplitude = standard_peak - standard_min
+    amplitude_ratio = patient_amplitude / standard_amplitude if standard_amplitude else None
+    correlation = compute_correlation(patient_values, standard_values)
 
     outside_percent = None
     has_band = all(row.get("lower") is not None and row.get("upper") is not None for row in standard_rows)
@@ -614,19 +627,23 @@ def compute_metrics(patient_rows, standard_rows):
         "patientPeakAngle": round(patient_peak, 6),
         "standardPeakAngle": round(standard_peak, 6),
         "peakAngleDifference": round(patient_peak - standard_peak, 6),
+        "patientPeakPercent": round(patient_peak_percent, 6),
+        "standardPeakPercent": round(standard_peak_percent, 6),
+        "peakTimingDifferencePercent": round(patient_peak_percent - standard_peak_percent, 6),
         "patientMinAngle": round(patient_min, 6),
         "standardMinAngle": round(standard_min, 6),
         "minAngleDifference": round(patient_min - standard_min, 6),
         "patientAmplitude": round(patient_amplitude, 6),
         "standardAmplitude": round(standard_amplitude, 6),
         "amplitudeDifference": round(patient_amplitude - standard_amplitude, 6),
+        "amplitudeRatio": round(amplitude_ratio, 6) if amplitude_ratio is not None else None,
+        "rangeOfMotionPercentOfStandard": round(amplitude_ratio * 100.0, 6) if amplitude_ratio is not None else None,
         "mae": round(safe_mean(abs_deviations), 6),
         "rmse": round(math.sqrt(safe_mean(squared_deviations)), 6),
+        "shapeRmseAfterOffsetCorrection": round(math.sqrt(safe_mean(offset_corrected_squared)), 6),
         "maxAbsoluteDeviation": round(max(abs_deviations), 6),
-        "meanSignedDeviation": round(safe_mean(deviations), 6),
-        "correlation": round(compute_correlation(patient_values, standard_values), 6)
-        if compute_correlation(patient_values, standard_values) is not None
-        else None,
+        "meanSignedDeviation": round(mean_signed_deviation, 6),
+        "correlation": round(correlation, 6) if correlation is not None else None,
         "outsideStandardBandPercent": round(outside_percent, 6) if outside_percent is not None else None,
     }
 
@@ -636,6 +653,14 @@ def average_aligned_segments(aligned_segments, standard_rows):
     for point_index, standard_row in enumerate(standard_rows):
         values = [segment[point_index]["angle"] for segment in aligned_segments]
         averaged.append({"percent": standard_row["percent"], "angle": safe_mean(values)})
+    return averaged
+
+
+def median_aligned_segments(aligned_segments, standard_rows):
+    averaged = []
+    for point_index, standard_row in enumerate(standard_rows):
+        values = [segment[point_index]["angle"] for segment in aligned_segments]
+        averaged.append({"percent": standard_row["percent"], "angle": median(values)})
     return averaged
 
 
@@ -675,7 +700,8 @@ def compare_patient_to_standard(patient_curve, standard_rows, action, segment_mo
 
     if segments:
         aligned_segments = [align_patient_to_standard(segment, standard_rows, smooth_window) for segment in segments]
-        patient_rows = average_aligned_segments(aligned_segments, standard_rows)
+        patient_rows = median_aligned_segments(aligned_segments, standard_rows)
+        segmentation["aggregationMethod"] = "pointwise_median"
         metrics = compute_metrics(patient_rows, standard_rows)
 
         segment_metrics = []
@@ -730,6 +756,45 @@ def classify_status(metrics):
     return "mild_deviation"
 
 
+def classify_threshold_value(value, normal_max, mild_max, use_absolute=True):
+    if value is None:
+        return "unclear"
+    comparable = abs(value) if use_absolute else value
+    if comparable <= normal_max:
+        return "normal"
+    if comparable <= mild_max:
+        return "mild_deviation"
+    return "significant_deviation"
+
+
+def build_component_status(metrics):
+    return {
+        "overall": classify_status(metrics),
+        "shape": classify_threshold_value(
+            metrics.get("shapeRmseAfterOffsetCorrection"),
+            NORMAL_RMSE_MAX,
+            MILD_RMSE_MAX,
+            use_absolute=False,
+        ),
+        "rangeOfMotion": classify_threshold_value(
+            metrics.get("amplitudeDifference"),
+            NORMAL_AMPLITUDE_DIFF_MAX,
+            MILD_AMPLITUDE_DIFF_MAX,
+        ),
+        "verticalOffset": classify_threshold_value(
+            metrics.get("meanSignedDeviation"),
+            NORMAL_AMPLITUDE_DIFF_MAX,
+            MILD_AMPLITUDE_DIFF_MAX,
+        ),
+        "standardBand": classify_threshold_value(
+            metrics.get("outsideStandardBandPercent"),
+            NORMAL_OUTSIDE_BAND_MAX,
+            MILD_OUTSIDE_BAND_MAX,
+            use_absolute=False,
+        ),
+    }
+
+
 def estimate_confidence(action, metrics, segmentation=None):
     if metrics is None:
         return "low"
@@ -767,6 +832,8 @@ def generate_observations(action, metrics, segmentation=None):
     peak_diff = metrics["peakAngleDifference"]
     amplitude_diff = metrics["amplitudeDifference"]
     rmse = metrics["rmse"]
+    shape_rmse = metrics.get("shapeRmseAfterOffsetCorrection", rmse)
+    correlation = metrics.get("correlation")
     outside = metrics["outsideStandardBandPercent"]
 
     if segmentation and segmentation.get("used"):
@@ -783,22 +850,27 @@ def generate_observations(action, metrics, segmentation=None):
             observations.append("Lower peak knee angle may indicate reduced knee flexion during walking.")
         if amplitude_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
             observations.append("Lower movement amplitude may suggest reduced walking range of motion.")
-        if rmse > NORMAL_RMSE_MAX:
+        if shape_rmse > NORMAL_RMSE_MAX:
             observations.append("The walking curve differs from the standard curve shape.")
     elif action == "squat":
         if peak_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
             observations.append("Lower peak knee angle may suggest reduced squat depth or reduced knee flexion.")
         if amplitude_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
             observations.append("Lower movement amplitude may suggest incomplete squat movement.")
-        if rmse > NORMAL_RMSE_MAX:
+        if shape_rmse > NORMAL_RMSE_MAX:
             observations.append("The squat pattern differs from the healthy standard curve.")
     elif action == "upstairs":
         if peak_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
             observations.append("Lower peak knee angle may suggest reduced knee lift during stair climbing.")
         if amplitude_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
             observations.append("Lower movement amplitude may suggest limited movement range.")
-        if rmse > NORMAL_RMSE_MAX:
+        if shape_rmse > NORMAL_RMSE_MAX:
             observations.append("The stair-climbing curve differs from the standard curve shape.")
+
+    if correlation is not None and correlation >= 0.85 and shape_rmse <= MILD_RMSE_MAX and amplitude_diff < -NORMAL_AMPLITUDE_DIFF_MAX:
+        observations.append(
+            "The curve shape is relatively consistent with the standard, but the range of motion is lower."
+        )
 
     if outside is not None and outside > NORMAL_OUTSIDE_BAND_MAX:
         observations.append("A notable portion of the curve is outside the healthy standard deviation band.")
@@ -909,6 +981,7 @@ def build_output_json(
         "segmentation": segmentation,
         "status": status,
         "confidence": confidence,
+        "componentStatus": build_component_status(metrics),
         "engineeringThresholds": build_threshold_summary(),
         "metrics": metrics,
         "qualityNotes": quality_notes or [],
@@ -957,6 +1030,7 @@ def write_txt(path, data):
                 f"- Segments detected: {segmentation.get('segmentsDetected')}",
                 f"- Segments used: {segmentation.get('segmentsUsed')}",
                 f"- Segments rejected: {segmentation.get('segmentsRejected')}",
+                f"- Aggregation method: {segmentation.get('aggregationMethod')}",
                 f"- Average segment duration: {segmentation.get('averageSegmentDurationSeconds')} s",
                 f"- Fallback reason: {segmentation.get('fallbackReason')}",
                 "",
@@ -976,20 +1050,37 @@ def write_txt(path, data):
                 ]
             )
 
+    component_status = data.get("componentStatus") or {}
+    if component_status:
+        lines.extend(
+            [
+                "Component status:",
+                f"- Overall: {component_status.get('overall')}",
+                f"- Shape: {component_status.get('shape')}",
+                f"- Range of motion: {component_status.get('rangeOfMotion')}",
+                f"- Vertical offset: {component_status.get('verticalOffset')}",
+                f"- Standard band: {component_status.get('standardBand')}",
+                "",
+            ]
+        )
+
     lines.extend(
         [
         "Key metrics:",
         f"- Patient peak angle: {metrics['patientPeakAngle']} deg",
         f"- Standard peak angle: {metrics['standardPeakAngle']} deg",
         f"- Peak angle difference: {metrics['peakAngleDifference']} deg",
+        f"- Peak timing difference: {metrics.get('peakTimingDifferencePercent')} percentage points",
         f"- Patient min angle: {metrics['patientMinAngle']} deg",
         f"- Standard min angle: {metrics['standardMinAngle']} deg",
         f"- Min angle difference: {metrics['minAngleDifference']} deg",
         f"- Patient amplitude: {metrics['patientAmplitude']} deg",
         f"- Standard amplitude: {metrics['standardAmplitude']} deg",
         f"- Amplitude difference: {metrics['amplitudeDifference']} deg",
+        f"- Range of motion percent of standard: {metrics.get('rangeOfMotionPercentOfStandard')}",
         f"- MAE: {metrics['mae']} deg",
         f"- RMSE: {metrics['rmse']} deg",
+        f"- Shape RMSE after offset correction: {metrics.get('shapeRmseAfterOffsetCorrection')} deg",
         f"- Max absolute deviation: {metrics['maxAbsoluteDeviation']} deg",
         f"- Mean signed deviation: {metrics['meanSignedDeviation']} deg",
         f"- Correlation: {metrics['correlation']}",
@@ -1140,6 +1231,8 @@ def write_metrics_csv(path, data):
         rows.append({"section": "metrics", "name": key, "value": value})
     for key, value in (data.get("segmentation", {}).get("segmentMetricSummary") or {}).items():
         rows.append({"section": "segmentMetricSummary", "name": key, "value": value})
+    for key, value in data.get("componentStatus", {}).items():
+        rows.append({"section": "componentStatus", "name": key, "value": value})
     for key, value in data.get("engineeringThresholds", {}).items():
         rows.append({"section": "engineeringThresholds", "name": key, "value": value})
     rows.append({"section": "classification", "name": "status", "value": data.get("status")})
@@ -1221,6 +1314,7 @@ def write_html_report(path, data, patient_rows, standard_rows, aligned_segments)
         ("Confidence", data.get("confidence", "unknown")),
         ("Comparison", data.get("comparisonMode", "full_curve")),
         ("RMSE", f"{metrics['rmse']} deg"),
+        ("Shape RMSE", f"{metrics.get('shapeRmseAfterOffsetCorrection')} deg"),
         ("Amplitude diff", f"{metrics['amplitudeDifference']} deg"),
         ("Outside band", f"{metrics['outsideStandardBandPercent']}%"),
     ]
@@ -1242,7 +1336,7 @@ def write_html_report(path, data, patient_rows, standard_rows, aligned_segments)
     main {{ max-width: 1180px; margin: 0 auto; padding: 28px; }}
     h1 {{ margin: 0 0 6px; font-size: 30px; }}
     .subtitle {{ margin: 0 0 22px; color: #526176; }}
-    .cards {{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }}
+    .cards {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }}
     .card {{ background: #fff; border: 1px solid #d9e2ee; border-radius: 8px; padding: 16px; }}
     .label {{ color: #607086; font-size: 13px; margin-bottom: 8px; }}
     .value {{ font-weight: 700; font-size: 20px; }}

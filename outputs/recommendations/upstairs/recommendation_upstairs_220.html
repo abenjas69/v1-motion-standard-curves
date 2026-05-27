@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Patient vs Standard Curve - upstairs</title>
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; color: #172033; background: #f5f7fb; }
+    main { max-width: 1180px; margin: 0 auto; padding: 28px; }
+    h1 { margin: 0 0 6px; font-size: 30px; }
+    .subtitle { margin: 0 0 22px; color: #526176; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .card { background: #fff; border: 1px solid #d9e2ee; border-radius: 8px; padding: 16px; }
+    .label { color: #607086; font-size: 13px; margin-bottom: 8px; }
+    .value { font-weight: 700; font-size: 20px; }
+    .panel { background: #fff; border: 1px solid #d9e2ee; border-radius: 8px; padding: 18px; margin-bottom: 18px; }
+    .legend { display: flex; gap: 20px; flex-wrap: wrap; margin: 8px 0 16px; color: #33445c; }
+    .key { display: inline-flex; align-items: center; gap: 8px; }
+    .swatch { width: 28px; height: 4px; display: inline-block; }
+    svg { width: 100%; height: auto; display: block; background: #fff; }
+    .grid { stroke: #e5eaf1; stroke-width: 1; }
+    .axis { stroke: #a9b6c8; stroke-width: 1.2; }
+    .tick { fill: #526176; font-size: 12px; }
+    .band { fill: #8ec5ff; opacity: 0.22; }
+    .segment-line { fill: none; stroke: #7d8796; stroke-width: 1.1; opacity: 0.22; }
+    .standard-line { fill: none; stroke: #d64550; stroke-width: 4; }
+    .patient-line { fill: none; stroke: #0b6da8; stroke-width: 4; }
+    .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    li { margin-bottom: 8px; }
+    @media (max-width: 900px) { .cards, .section-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Patient vs Standard Curve: upstairs / left_knee</h1>
+  <p class="subtitle">AI-assisted motion analysis. This is not a medical diagnosis and should be reviewed by a doctor.</p>
+  <section class="cards"><div class="card"><div class="label">Status</div><div class="value">significant_deviation</div></div>
+<div class="card"><div class="label">Confidence</div><div class="value">medium</div></div>
+<div class="card"><div class="label">Comparison</div><div class="value">full_curve</div></div>
+<div class="card"><div class="label">RMSE</div><div class="value">30.791355 deg</div></div>
+<div class="card"><div class="label">Shape RMSE</div><div class="value">17.81815 deg</div></div>
+<div class="card"><div class="label">Amplitude diff</div><div class="value">-38.274611 deg</div></div>
+<div class="card"><div class="label">Outside band</div><div class="value">51.485149%</div></div></section>
+  <section class="panel">
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:#d64550"></span>Standard curve</span>
+      <span class="key"><span class="swatch" style="background:#0b6da8"></span>Patient average</span>
+      <span class="key"><span class="swatch" style="background:#8ec5ff"></span>Standard band</span>
+      <span class="key"><span class="swatch" style="background:#7d8796"></span>Patient segments</span>
+    </div>
+    <svg viewBox="0 0 1000 560" role="img" aria-label="Patient curve compared with standard curve">
+      <line x1="70.00" y1="70" x2="70.00" y2="490" class="grid" />
+<text x="70.00" y="542" class="tick" text-anchor="middle">0%</text>
+<line x1="285.00" y1="70" x2="285.00" y2="490" class="grid" />
+<text x="285.00" y="542" class="tick" text-anchor="middle">25%</text>
+<line x1="500.00" y1="70" x2="500.00" y2="490" class="grid" />
+<text x="500.00" y="542" class="tick" text-anchor="middle">50%</text>
+<line x1="715.00" y1="70" x2="715.00" y2="490" class="grid" />
+<text x="715.00" y="542" class="tick" text-anchor="middle">75%</text>
+<line x1="930.00" y1="70" x2="930.00" y2="490" class="grid" />
+<text x="930.00" y="542" class="tick" text-anchor="middle">100%</text>
+<line x1="70" y1="490.00" x2="930" y2="490.00" class="grid" />
+<text x="60" y="494.00" class="tick" text-anchor="end">-15.0</text>
+<line x1="70" y1="280.00" x2="930" y2="280.00" class="grid" />
+<text x="60" y="284.00" class="tick" text-anchor="end">47.5</text>
+<line x1="70" y1="70.00" x2="930" y2="70.00" class="grid" />
+<text x="60" y="74.00" class="tick" text-anchor="end">110.0</text>
+      <line x1="70" y1="490" x2="930" y2="490" class="axis" />
+      <line x1="70" y1="70" x2="70" y2="490" class="axis" />
+      <text x="500.0" y="552" class="tick" text-anchor="middle">Normalized action progress (%)</text>
+      <text transform="translate(20 280.0) rotate(-90)" class="tick" text-anchor="middle">Angle (deg)</text>
+      <polygon points="70.00,385.96 78.60,354.04 87.20,310.21 95.80,259.51 104.40,214.84 113.00,176.59 121.60,155.63 130.20,151.46 138.80,157.93 147.40,163.55 156.00,170.95 164.60,184.24 173.20,202.70 181.80,235.66 190.40,278.86 199.00,324.65 207.60,358.18 216.20,344.90 224.80,278.39 233.40,186.61 242.00,125.13 250.60,117.04 259.20,130.04 267.80,151.87 276.40,160.89 285.00,172.34 293.60,201.06 302.20,244.07 310.80,287.96 319.40,328.15 328.00,339.44 336.60,283.02 345.20,202.70 353.80,138.73 362.40,110.11 371.00,113.67 379.60,134.78 388.20,158.71 396.80,167.19 405.40,196.96 414.00,237.49 422.60,280.66 431.20,315.36 439.80,338.14 448.40,294.60 457.00,211.42 465.60,141.19 474.20,111.95 482.80,110.79 491.40,121.90 500.00,151.35 508.60,172.51 517.20,190.23 525.80,226.66 534.40,267.93 543.00,294.81 551.60,290.58 560.20,255.11 568.80,201.22 577.40,160.57 586.00,119.46 594.60,100.91 603.20,118.14 611.80,142.55 620.40,163.90 629.00,189.15 637.60,217.96 646.20,256.44 654.80,281.50 663.40,268.75 672.00,236.14 680.60,199.91 689.20,168.50 697.80,128.43 706.40,112.46 715.00,125.22 723.60,136.15 732.20,163.54 740.80,191.64 749.40,220.84 758.00,248.73 766.60,271.40 775.20,266.15 783.80,246.00 792.40,224.82 801.00,195.93 809.60,167.70 818.20,150.41 826.80,163.39 835.40,219.82 844.00,293.88 852.60,331.06 861.20,345.30 869.80,339.34 878.40,336.33 887.00,334.67 895.60,339.62 904.20,351.99 912.80,368.80 921.40,377.92 930.00,375.68 930.00,429.99 921.40,430.78 912.80,436.40 904.20,448.52 895.60,457.10 887.00,458.80 878.40,458.19 869.80,456.60 861.20,448.92 852.60,444.00 844.00,428.37 835.40,406.36 826.80,373.14 818.20,342.76 809.60,342.33 801.00,364.23 792.40,398.39 783.80,417.50 775.20,424.13 766.60,416.57 758.00,394.95 749.40,364.91 740.80,329.82 732.20,300.75 723.60,282.24 715.00,260.31 706.40,252.30 697.80,266.92 689.20,325.74 680.60,379.13 672.00,415.06 663.40,420.93 654.80,413.66 646.20,401.34 637.60,372.92 629.00,328.99 620.40,296.38 611.80,274.64 603.20,255.96 594.60,247.81 586.00,270.36 577.40,326.96 568.80,389.72 560.20,420.89 551.60,425.42 543.00,421.12 534.40,402.83 525.80,365.89 517.20,320.50 508.60,271.40 500.00,248.38 491.40,246.29 482.80,252.08 474.20,280.24 465.60,340.80 457.00,385.20 448.40,408.00 439.80,417.50 431.20,420.56 422.60,402.70 414.00,367.15 405.40,322.83 396.80,270.28 388.20,226.44 379.60,214.69 371.00,232.07 362.40,265.83 353.80,331.06 345.20,394.69 336.60,411.17 328.00,409.57 319.40,408.69 310.80,395.09 302.20,363.82 293.60,316.66 285.00,268.36 276.40,225.85 267.80,199.48 259.20,202.92 250.60,241.10 242.00,316.67 233.40,381.53 224.80,415.51 216.20,414.58 207.60,412.02 199.00,408.00 190.40,389.92 181.80,356.95 173.20,314.65 164.60,271.99 156.00,244.24 147.40,229.50 138.80,226.35 130.20,243.03 121.60,279.48 113.00,330.73 104.40,387.52 95.80,425.61 87.20,440.39 78.60,440.24 70.00,435.62" class="band" />
+      
+      <polyline points="70.00,394.41 78.60,381.45 87.20,365.40 95.80,333.97 104.40,298.05 113.00,262.44 121.60,232.36 130.20,211.42 138.80,202.21 147.40,204.32 156.00,216.61 164.60,237.44 173.20,265.02 181.80,296.76 190.40,328.16 199.00,352.37 207.60,362.50 216.20,352.44 224.80,323.35 233.40,282.15 242.00,239.49 250.60,205.24 259.20,187.10 267.80,186.99 276.40,202.95 285.00,230.44 293.60,263.61 302.20,298.62 310.80,329.45 319.40,347.10 328.00,346.05 336.60,324.72 345.20,288.63 353.80,248.31 362.40,213.83 371.00,192.61 379.60,189.38 388.20,203.76 396.80,229.65 405.40,263.04 414.00,298.12 422.60,329.94 431.20,348.22 439.80,347.42 448.40,327.28 457.00,292.90 465.60,253.63 474.20,220.19 482.80,200.50 491.40,196.69 500.00,208.54 508.60,231.51 517.20,261.77 525.80,293.39 534.40,320.60 543.00,337.12 551.60,336.96 560.20,318.64 568.80,286.03 577.40,249.30 586.00,219.11 594.60,201.74 603.20,199.01 611.80,211.84 620.40,236.06 629.00,264.43 637.60,292.22 646.20,315.16 654.80,328.47 663.40,327.29 672.00,310.93 680.60,280.95 689.20,248.46 697.80,221.89 706.40,205.83 715.00,202.83 723.60,215.44 732.20,237.54 740.80,263.36 749.40,290.32 758.00,312.92 766.60,327.12 775.20,330.86 783.80,322.51 792.40,304.72 801.00,285.01 809.60,272.31 818.20,272.61 826.80,288.82 835.40,315.32 844.00,345.42 852.60,371.36 861.20,388.20 869.80,395.32 878.40,397.49 887.00,398.11 895.60,399.04 904.20,400.46 912.80,401.68 921.40,402.51 930.00,403.26" class="standard-line" />
+      <polyline points="70.00,396.54 78.60,383.26 87.20,381.25 95.80,367.30 104.40,347.50 113.00,333.38 121.60,332.87 130.20,333.71 138.80,347.63 147.40,367.62 156.00,382.26 164.60,392.59 173.20,394.26 181.80,390.64 190.40,381.70 199.00,371.28 207.60,358.99 216.20,354.09 224.80,351.15 233.40,349.36 242.00,346.76 250.60,341.29 259.20,333.61 267.80,334.55 276.40,348.63 285.00,365.24 293.60,383.38 302.20,398.13 310.80,402.00 319.40,396.92 328.00,390.53 336.60,382.19 345.20,377.24 353.80,373.04 362.40,368.62 371.00,365.57 379.60,372.46 388.20,380.94 396.80,388.24 405.40,397.48 414.00,405.40 422.60,405.85 431.20,398.88 439.80,394.64 448.40,389.19 457.00,381.12 465.60,373.36 474.20,362.97 482.80,345.65 491.40,323.79 500.00,318.18 508.60,322.21 517.20,325.60 525.80,335.04 534.40,345.67 543.00,347.84 551.60,351.35 560.20,360.49 568.80,370.35 577.40,385.91 586.00,396.97 594.60,396.55 603.20,396.39 611.80,395.24 620.40,390.01 629.00,377.14 637.60,370.56 646.20,365.85 654.80,356.78 663.40,351.02 672.00,356.02 680.60,359.52 689.20,363.86 697.80,371.63 706.40,380.63 715.00,386.00 723.60,390.13 732.20,387.11 740.80,379.92 749.40,369.17 758.00,362.27 766.60,352.85 775.20,345.90 783.80,342.11 792.40,347.36 801.00,354.98 809.60,366.62 818.20,377.73 826.80,389.70 835.40,392.03 844.00,386.45 852.60,377.65 861.20,376.56 869.80,377.96 878.40,381.64 887.00,390.46 895.60,399.88 904.20,402.95 912.80,403.01 921.40,403.75 930.00,402.53" class="patient-line" />
+    </svg>
+  </section>
+  <section class="section-grid">
+    <div class="panel">
+      <h2>Observations</h2>
+      <ul><li>Lower peak knee angle may suggest reduced knee lift during stair climbing.</li>
+<li>Lower movement amplitude may suggest limited movement range.</li>
+<li>The stair-climbing curve differs from the standard curve shape.</li>
+<li>A notable portion of the curve is outside the healthy standard deviation band.</li>
+<li>The patient curve is generally below the standard curve.</li></ul>
+    </div>
+    <div class="panel">
+      <h2>Quality Notes</h2>
+      <ul><li>Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition.</li>
+<li>The comparison used the full patient curve because segmentation was not available or not appropriate for this action.</li>
+<li>Upstairs is currently compared as a full stair-climbing action because the current standard curve is full-action based.</li></ul>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Recommendation</h2>
+    <p>The stair-climbing curve shows significant deviation from the current healthy reference. Lower peak knee angle may suggest reduced knee lift during stair climbing. Lower movement amplitude may suggest limited movement range. The stair-climbing curve differs from the standard curve shape. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.</p>
+  </section>
+</main>
+</body>
+</html>

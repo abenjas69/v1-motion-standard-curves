@@ -1,0 +1,8 @@
+used_segment_index,detected_segment_index,source,start_time_seconds,end_time_seconds,duration_seconds,point_count,amplitude_degrees,peak_angle,status,rmse,mae,peak_angle_difference,amplitude_difference,outside_standard_band_percent
+1,4,local_minima,3.419,4.44,1.021,11,32.22,33.18,significant_deviation,16.230453,12.373941,-28.506697,-22.069029,83.168317
+2,6,local_minima,4.829,5.941,1.112,12,30.12,31.81,significant_deviation,18.027254,13.763266,-29.941285,-24.045567,83.168317
+3,8,local_minima,6.33,7.515,1.185,12,21.98,23.27,significant_deviation,19.756927,14.973607,-38.281569,-32.133716,86.138614
+4,9,local_minima,7.515,9.269,1.754,19,40.88,41.37,significant_deviation,20.352847,15.355588,-23.782879,-16.761306,96.039604
+5,10,local_minima,9.269,10.77,1.501,16,26.16,26.87,significant_deviation,22.57774,15.915225,-34.69162,-27.981445,82.178218
+6,11,local_minima,10.77,11.925,1.155,12,31.91,33.21,significant_deviation,18.073647,13.303623,-28.651232,-22.479779,80.19802
+7,13,local_minima,12.3,13.5,1.2,13,28.73,29.08,significant_deviation,22.965539,16.210187,-32.859617,-25.811235,81.188119

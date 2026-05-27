@@ -1,0 +1,81 @@
+AI-Assisted Motion Curve Recommendation
+
+Action: squat
+Angle ID: left_knee
+Comparison version: v0.5-robust-component-metrics
+Input type: api
+Patient source: http://113.44.220.94:3000/measurements/228
+Standard source: output_squat_python_new_data/standard_squat_curve.csv
+Comparison mode: segmented
+Status: significant_deviation
+Confidence: medium
+
+Segmentation:
+- Requested mode: auto
+- Method: peak_centered_repetitions
+- Label: repetitions
+- Attempted: True
+- Used: True
+- Segments detected: 5
+- Segments used: 4
+- Segments rejected: 1
+- Aggregation method: pointwise_median
+- Average segment duration: 3.52175 s
+- Fallback reason: None
+
+Segment metric summary:
+- Segment RMSE mean: 33.592926 deg
+- Segment RMSE std: 4.989008 deg
+- Segment amplitude difference mean: -44.847316 deg
+- Segment peak angle difference mean: -51.986318 deg
+- Segment outside standard band mean: 61.881189
+
+Component status:
+- Overall: significant_deviation
+- Shape: significant_deviation
+- Range of motion: significant_deviation
+- Vertical offset: significant_deviation
+- Standard band: significant_deviation
+
+Key metrics:
+- Patient peak angle: 53.378588 deg
+- Standard peak angle: 102.884455 deg
+- Peak angle difference: -49.505867 deg
+- Peak timing difference: 7.0 percentage points
+- Patient min angle: 1.075397 deg
+- Standard min angle: 7.985524 deg
+- Min angle difference: -6.910127 deg
+- Patient amplitude: 52.30319 deg
+- Standard amplitude: 94.898931 deg
+- Amplitude difference: -42.595741 deg
+- Range of motion percent of standard: 55.114625
+- MAE: 26.060243 deg
+- RMSE: 32.085536 deg
+- Shape RMSE after offset correction: 18.717514 deg
+- Max absolute deviation: 53.927072 deg
+- Mean signed deviation: -26.060243 deg
+- Correlation: 0.958057
+- Outside standard band percent: 53.465347
+
+Observations:
+- The comparison used 4 detected repetitions from the patient curve.
+- Lower peak knee angle may suggest reduced squat depth or reduced knee flexion.
+- Lower movement amplitude may suggest incomplete squat movement.
+- The squat pattern differs from the healthy standard curve.
+- A notable portion of the curve is outside the healthy standard deviation band.
+- The patient curve is generally below the standard curve.
+
+Quality notes:
+- Large mean signed deviation detected. Check whether patient and standard curves use the same angle convention, calibration, and action definition.
+- Large peak-angle difference detected. Review the raw curve visually before interpreting this as a movement finding.
+
+Recommendation:
+The squat curve shows significant deviation from the current healthy reference. The comparison used 4 detected repetitions from the patient curve. Lower peak knee angle may suggest reduced squat depth or reduced knee flexion. Lower movement amplitude may suggest incomplete squat movement. The squat pattern differs from the healthy standard curve. A notable portion of the curve is outside the healthy standard deviation band. The patient curve is generally below the standard curve. This may indicate a movement difference, but it is not a final medical diagnosis and should be reviewed by a doctor.
+
+Doctor review note:
+This is AI-assisted analysis and should be reviewed by a doctor.
+
+Limitations:
+- This output is not a medical diagnosis.
+- The analysis is based only on motion curve data.
+- The result should be interpreted by a qualified clinician.
